@@ -8,6 +8,10 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
+        Vec3 { x, y, z }
+    }
+
     pub fn squared_norm(&self) -> f32 {
         (self.x * self.x + self.y * self.y + self.z * self.z)
     }
@@ -152,14 +156,14 @@ impl ops::DivAssign<Vec3> for Vec3 {
     }
 }
 
-struct RGB {
-    r: f32,
-    g: f32,
-    b: f32,
+pub struct RGB {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
 }
 
 impl RGB {
-    fn from(v: Vec3) -> Self {
+    pub fn from(v: Vec3) -> Self {
         RGB {
             r: v.x,
             g: v.y,
