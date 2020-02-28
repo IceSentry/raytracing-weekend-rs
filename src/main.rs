@@ -57,16 +57,12 @@ fn render_to_frame(frame: &mut [u8]) {
             let r = Ray::new(origin, lower_left_corner + u * horizontal + v * vertical);
             let col = color(&r, &world);
 
-            let rgb_vector = 255.99 * col;
-            let rgba = [
-                rgb_vector.x as u8,
-                rgb_vector.y as u8,
-                rgb_vector.z as u8,
-                0xff,
-            ];
-            match pixels.next() {
-                None => return,
-                Some(pixel) => pixel.copy_from_slice(&rgba),
+            let irgb = 255.99 * col;
+
+            // Draw pixel
+            if let Some(pixel) = pixels.next() {
+                let rgba = [irgb.x as u8, irgb.y as u8, irgb.z as u8, 0xff];
+                pixel.copy_from_slice(&rgba)
             }
         }
     }

@@ -155,19 +155,3 @@ impl ops::DivAssign<Vec3> for Vec3 {
         *self = *self / rhs
     }
 }
-
-pub struct RGB {
-    pub r: f32,
-    pub g: f32,
-    pub b: f32,
-}
-
-impl RGB {
-    pub fn from(v: Vec3) -> Self {
-        RGB {
-            r: v.x,
-            g: v.y,
-            b: v.z,
-        }
-    }
-}
