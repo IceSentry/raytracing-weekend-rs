@@ -2,19 +2,25 @@ use std::f32;
 use std::time::Instant;
 
 use pixels::{wgpu::Surface, Error, Pixels, SurfaceTexture};
+use rand::Rng;
 use winit::dpi::LogicalSize;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
-mod ray;
-use ray::Ray;
-mod vec3;
-use vec3::Vec3;
+mod camera;
 mod hittable;
-use hittable::{Hittable, HittableList};
+mod ray;
 mod sphere;
-use sphere::Sphere;
+mod vec3;
+
+use crate::{
+    camera::Camera,
+    hittable::{Hittable, HittableList},
+    ray::Ray,
+    sphere::Sphere,
+    vec3::Vec3,
+};
 
 const WIDTH: u32 = 200;
 const HEIGHT: u32 = 100;
@@ -31,11 +37,9 @@ fn color(r: &Ray, world: &dyn Hittable) -> Vec3 {
 }
 
 fn render_to_frame(frame: &mut [u8]) {
-    let lower_left_corner = Vec3::new(-2., -1., -1.);
-    let horizontal = Vec3::new(4., 0., 0.);
-    let vertical = Vec3::new(0., 2., 0.);
-    let origin = Vec3::new(0., 0., 0.);
-
+    let mut rng = rand::thread_rng();
+    let val = rng.gen_range(0., 1.);
+    let ns = 100;
     let world = HittableList {
         list: vec![
             Box::new(Sphere {
@@ -48,20 +52,24 @@ fn render_to_frame(frame: &mut [u8]) {
             }),
         ],
     };
-
+    let cam = Camera::new();
     let mut pixels = frame.chunks_exact_mut(4);
     for j in (0..HEIGHT).rev() {
         for i in 0..WIDTH {
-            let u = i as f32 / WIDTH as f32;
-            let v = j as f32 / HEIGHT as f32;
-            let r = Ray::new(origin, lower_left_corner + u * horizontal + v * vertical);
-            let col = color(&r, &world);
+            let mut col = Vec3::new(0., 0., 0.);
+            for _ in 0..ns {
+                let u = (i as f32 + rng.gen_range(0., 1.)) / WIDTH as f32;
+                let v = (j as f32 + rng.gen_range(0., 1.)) / HEIGHT as f32;
+                let r = cam.get_ray(u, v);
+                col += color(&r, &world);
+            }
+            col /= ns as f32;
 
-            let irgb = 255.99 * col;
+            let vrgb = 255.99 * col;
 
             // Draw pixel
             if let Some(pixel) = pixels.next() {
-                let rgba = [irgb.x as u8, irgb.y as u8, irgb.z as u8, 0xff];
+                let rgba = [vrgb.x as u8, vrgb.y as u8, vrgb.z as u8, 0xff];
                 pixel.copy_from_slice(&rgba)
             }
         }
@@ -69,7 +77,7 @@ fn render_to_frame(frame: &mut [u8]) {
 }
 
 fn main() -> Result<(), Error> {
-    let scale_factor = 2;
+    let scale_factor = 3;
     let scaled_width = WIDTH * scale_factor;
     let scaled_height = HEIGHT * scale_factor;
 
@@ -94,7 +102,7 @@ fn main() -> Result<(), Error> {
     let mut time = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
-        // *control_flow = ControlFlow::Wait;
+        *control_flow = ControlFlow::Wait;
 
         match event {
             Event::WindowEvent {
@@ -118,6 +126,6 @@ fn main() -> Result<(), Error> {
 
         let title = format!("Hello Pixels - {:?}", delta_time);
         window.set_title(&title);
-        window.request_redraw();
+        // window.request_redraw();
     });
 }

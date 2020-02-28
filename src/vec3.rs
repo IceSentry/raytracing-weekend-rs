@@ -155,3 +155,9 @@ impl ops::DivAssign<Vec3> for Vec3 {
         *self = *self / rhs
     }
 }
+
+impl ops::DivAssign<f32> for Vec3 {
+    fn div_assign(&mut self, rhs: f32) {
+        *self = *self / rhs
+    }
+}
