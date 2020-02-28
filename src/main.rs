@@ -25,9 +25,28 @@ use crate::{
 const WIDTH: u32 = 200;
 const HEIGHT: u32 = 100;
 
+fn random_in_unit_sphere() -> Vec3 {
+    let mut rng = rand::thread_rng();
+
+    loop {
+        let p =
+            2.0 * Vec3::new(
+                rng.gen_range(0., 1.),
+                rng.gen_range(0., 1.),
+                rng.gen_range(0., 1.),
+            ) - Vec3::new(1., 1., 1.);
+        if p.squared_norm() < 1. {
+            return p;
+        }
+    }
+}
+
 fn color(r: &Ray, world: &dyn Hittable) -> Vec3 {
-    match world.hit(r, 0.0, f32::MAX) {
-        Some(hit) => 0.5 * Vec3::new(hit.normal.x + 1., hit.normal.y + 1., hit.normal.z + 1.),
+    match world.hit(r, 0.0001, f32::MAX) {
+        Some(hit) => {
+            let target = hit.p + hit.normal + random_in_unit_sphere();
+            0.5 * color(&Ray::new(hit.p, target - hit.p), world)
+        }
         None => {
             let unit_direction = r.direction.unit();
             let t = 0.5 * (unit_direction.y + 1.0);
@@ -38,7 +57,6 @@ fn color(r: &Ray, world: &dyn Hittable) -> Vec3 {
 
 fn render_to_frame(frame: &mut [u8]) {
     let mut rng = rand::thread_rng();
-    let val = rng.gen_range(0., 1.);
     let ns = 100;
     let world = HittableList {
         list: vec![
@@ -64,6 +82,8 @@ fn render_to_frame(frame: &mut [u8]) {
                 col += color(&r, &world);
             }
             col /= ns as f32;
+
+            col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
 
             let vrgb = 255.99 * col;
 
@@ -99,8 +119,9 @@ fn main() -> Result<(), Error> {
         Pixels::new(WIDTH, HEIGHT, surface_texture).expect("Failed to create a new Pixels instance")
     };
 
-    let mut time = Instant::now();
+    render_to_frame(pixels.get_frame());
 
+    let mut time = Instant::now();
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
@@ -110,7 +131,6 @@ fn main() -> Result<(), Error> {
                 window_id,
             } if window_id == window.id() => *control_flow = ControlFlow::Exit,
             Event::RedrawRequested(_) => {
-                render_to_frame(pixels.get_frame());
                 pixels.render();
             }
             Event::WindowEvent {
@@ -124,8 +144,13 @@ fn main() -> Result<(), Error> {
         let delta_time = now.duration_since(time);
         time = now;
 
-        let title = format!("Hello Pixels - {:?}", delta_time);
-        window.set_title(&title);
+        // let sync_rate = std::time::Duration::from_millis(15);
+        // if delta_time < sync_rate {
+        //     std::thread::sleep(sync_rate - delta_time);
+        // }
+
+        // let title = format!("Hello Pixels - {:?}", delta_time);
+        // window.set_title(&title);
         // window.request_redraw();
     });
 }
