@@ -10,6 +10,7 @@ use winit::window::WindowBuilder;
 
 mod camera;
 mod hittable;
+mod material;
 mod ray;
 mod sphere;
 mod vec3;
@@ -17,6 +18,7 @@ mod vec3;
 use crate::{
     camera::Camera,
     hittable::{Hittable, HittableList},
+    material::{scatter, Material},
     ray::Ray,
     sphere::Sphere,
     vec3::Vec3,
@@ -24,6 +26,10 @@ use crate::{
 
 const WIDTH: u32 = 200;
 const HEIGHT: u32 = 100;
+
+fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+    v - 2. * v.dot(n) * n
+}
 
 fn random_in_unit_sphere() -> Vec3 {
     let mut rng = rand::thread_rng();
@@ -41,11 +47,15 @@ fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
-fn color(r: &Ray, world: &dyn Hittable) -> Vec3 {
+fn color(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
     match world.hit(r, 0.0001, f32::MAX) {
         Some(hit) => {
-            let target = hit.p + hit.normal + random_in_unit_sphere();
-            0.5 * color(&Ray::new(hit.p, target - hit.p), world)
+            if depth < 50 {
+                if let Some((scattered, attenuation)) = scatter(r, &hit) {
+                    return attenuation * color(&scattered, world, depth + 1);
+                }
+            }
+            Vec3::zero()
         }
         None => {
             let unit_direction = r.direction.unit();
@@ -63,10 +73,22 @@ fn render_to_frame(frame: &mut [u8]) {
             Box::new(Sphere {
                 center: Vec3::new(0., 0., -1.),
                 radius: 0.5,
+                mat: Material::Lambertian(Vec3::new(0.8, 0.3, 0.3)),
             }),
             Box::new(Sphere {
                 center: Vec3::new(0., -100.5, -1.),
                 radius: 100.,
+                mat: Material::Lambertian(Vec3::new(0.8, 0.8, 0.)),
+            }),
+            Box::new(Sphere {
+                center: Vec3::new(1., 0., -1.),
+                radius: 0.5,
+                mat: Material::Metal(Vec3::new(0.8, 0.6, 0.2), 1.),
+            }),
+            Box::new(Sphere {
+                center: Vec3::new(-1., 0., -1.),
+                radius: 0.5,
+                mat: Material::Metal(Vec3::new(0.8, 0.8, 0.8), 0.3),
             }),
         ],
     };
@@ -79,7 +101,7 @@ fn render_to_frame(frame: &mut [u8]) {
                 let u = (i as f32 + rng.gen_range(0., 1.)) / WIDTH as f32;
                 let v = (j as f32 + rng.gen_range(0., 1.)) / HEIGHT as f32;
                 let r = cam.get_ray(u, v);
-                col += color(&r, &world);
+                col += color(&r, &world, 0);
             }
             col /= ns as f32;
 
@@ -141,7 +163,7 @@ fn main() -> Result<(), Error> {
         }
 
         let now = Instant::now();
-        let delta_time = now.duration_since(time);
+        let _delta_time = now.duration_since(time);
         time = now;
 
         // let sync_rate = std::time::Duration::from_millis(15);

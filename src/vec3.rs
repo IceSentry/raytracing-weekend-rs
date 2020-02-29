@@ -12,6 +12,10 @@ impl Vec3 {
         Vec3 { x, y, z }
     }
 
+    pub fn zero() -> Self {
+        Vec3::new(0., 0., 0.)
+    }
+
     pub fn squared_norm(&self) -> f32 {
         (self.x * self.x + self.y * self.y + self.z * self.z)
     }

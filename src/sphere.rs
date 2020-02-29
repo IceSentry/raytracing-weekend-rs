@@ -1,5 +1,6 @@
 use crate::{
     hittable::{HitRecord, Hittable},
+    material::Material,
     ray::Ray,
     vec3::Vec3,
 };
@@ -7,6 +8,7 @@ use crate::{
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
+    pub mat: Material,
 }
 
 impl Hittable for Sphere {
@@ -26,8 +28,10 @@ impl Hittable for Sphere {
                     t: temp,
                     p,
                     normal: (p - self.center) / self.radius,
+                    mat: self.mat,
                 });
             }
+
             temp = (-b + discriminant.sqrt()) / a;
             if temp < t_max && temp > t_min {
                 let p = r.point_at(temp);
@@ -35,6 +39,7 @@ impl Hittable for Sphere {
                     t: temp,
                     p,
                     normal: (p - self.center) / self.radius,
+                    mat: self.mat,
                 });
             }
         }

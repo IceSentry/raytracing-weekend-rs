@@ -1,10 +1,10 @@
-use crate::{ray::Ray, vec3::Vec3};
+use crate::{material::Material, ray::Ray, vec3::Vec3};
 
-#[derive(Default)]
 pub struct HitRecord {
     pub t: f32,
     pub p: Vec3,
     pub normal: Vec3,
+    pub mat: Material,
 }
 
 pub trait Hittable {
@@ -17,25 +17,16 @@ pub struct HittableList {
 
 impl Hittable for HittableList {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        let mut hit_anything = false;
         let mut closest_so_far = t_max;
-        let mut temp_rec = Default::default();
+        let mut result = None;
 
         for hittable in self.list.iter() {
-            match hittable.hit(&r, t_min, closest_so_far) {
-                None => (),
-                Some(rec) => {
-                    hit_anything = true;
-                    closest_so_far = rec.t;
-                    temp_rec = rec;
-                }
+            if let Some(rec) = hittable.hit(&r, t_min, closest_so_far) {
+                closest_so_far = rec.t;
+                result = Some(rec);
             }
         }
 
-        if hit_anything {
-            Some(temp_rec)
-        } else {
-            None
-        }
+        result
     }
 }
