@@ -1,9 +1,30 @@
-use crate::{hittable::HitRecord, random_in_unit_sphere, ray::Ray, reflect, vec3::Vec3};
+use crate::{hittable::HitRecord, ray::Ray, vec3::Vec3};
+use rand::Rng;
 
 #[derive(Clone, Copy)]
 pub enum Material {
     Lambertian { albedo: Vec3 },
     Metal { albedo: Vec3, fuzziness: f32 },
+}
+
+fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+    v - 2. * v.dot(n) * n
+}
+
+fn random_in_unit_sphere() -> Vec3 {
+    let mut rng = rand::thread_rng();
+
+    loop {
+        let p =
+            2.0 * Vec3::new(
+                rng.gen_range(0., 1.),
+                rng.gen_range(0., 1.),
+                rng.gen_range(0., 1.),
+            ) - Vec3::new(1., 1., 1.);
+        if p.squared_norm() < 1. {
+            return p;
+        }
+    }
 }
 
 pub fn scatter(r_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vec3)> {

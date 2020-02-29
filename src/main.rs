@@ -33,26 +33,6 @@ use crate::{
 const WIDTH: u32 = 400;
 const HEIGHT: u32 = 200;
 
-fn reflect(v: Vec3, n: Vec3) -> Vec3 {
-    v - 2. * v.dot(n) * n
-}
-
-fn random_in_unit_sphere() -> Vec3 {
-    let mut rng = rand::thread_rng();
-
-    loop {
-        let p =
-            2.0 * Vec3::new(
-                rng.gen_range(0., 1.),
-                rng.gen_range(0., 1.),
-                rng.gen_range(0., 1.),
-            ) - Vec3::new(1., 1., 1.);
-        if p.squared_norm() < 1. {
-            return p;
-        }
-    }
-}
-
 fn color(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
     match world.hit(r, 0.0001, f32::MAX) {
         Some(hit) => {
