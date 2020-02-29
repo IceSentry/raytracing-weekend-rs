@@ -1,12 +1,18 @@
+#[macro_use]
+extern crate impl_ops;
+
 use std::f32;
 use std::time::Instant;
 
 use pixels::{wgpu::Surface, Error, Pixels, SurfaceTexture};
 use rand::Rng;
-use winit::dpi::LogicalSize;
-use winit::event::{Event, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop};
-use winit::window::WindowBuilder;
+use rayon::prelude::*;
+use winit::{
+    dpi::LogicalSize,
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoop},
+    window::WindowBuilder,
+};
 
 mod camera;
 mod hittable;
@@ -24,8 +30,8 @@ use crate::{
     vec3::Vec3,
 };
 
-const WIDTH: u32 = 200;
-const HEIGHT: u32 = 100;
+const WIDTH: u32 = 400;
+const HEIGHT: u32 = 200;
 
 fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2. * v.dot(n) * n
@@ -66,60 +72,74 @@ fn color(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
 }
 
 fn render_to_frame(frame: &mut [u8]) {
-    let mut rng = rand::thread_rng();
     let ns = 100;
+    let cam = Camera::new();
     let world = HittableList {
         list: vec![
             Box::new(Sphere {
                 center: Vec3::new(0., 0., -1.),
                 radius: 0.5,
-                mat: Material::Lambertian(Vec3::new(0.8, 0.3, 0.3)),
+                mat: Material::Lambertian {
+                    albedo: Vec3::new(0.8, 0.3, 0.3),
+                },
             }),
             Box::new(Sphere {
                 center: Vec3::new(0., -100.5, -1.),
                 radius: 100.,
-                mat: Material::Lambertian(Vec3::new(0.8, 0.8, 0.)),
+                mat: Material::Lambertian {
+                    albedo: Vec3::new(0.8, 0.8, 0.),
+                },
             }),
             Box::new(Sphere {
                 center: Vec3::new(1., 0., -1.),
                 radius: 0.5,
-                mat: Material::Metal(Vec3::new(0.8, 0.6, 0.2), 1.),
+                mat: Material::Metal {
+                    albedo: Vec3::new(0.8, 0.6, 0.2),
+                    fuzziness: 1.,
+                },
             }),
             Box::new(Sphere {
                 center: Vec3::new(-1., 0., -1.),
                 radius: 0.5,
-                mat: Material::Metal(Vec3::new(0.8, 0.8, 0.8), 0.3),
+                mat: Material::Metal {
+                    albedo: Vec3::new(0.8, 0.8, 0.8),
+                    fuzziness: 0.3,
+                },
             }),
         ],
     };
-    let cam = Camera::new();
-    let mut pixels = frame.chunks_exact_mut(4);
-    for j in (0..HEIGHT).rev() {
-        for i in 0..WIDTH {
-            let mut col = Vec3::new(0., 0., 0.);
-            for _ in 0..ns {
-                let u = (i as f32 + rng.gen_range(0., 1.)) / WIDTH as f32;
-                let v = (j as f32 + rng.gen_range(0., 1.)) / HEIGHT as f32;
-                let r = cam.get_ray(u, v);
-                col += color(&r, &world, 0);
-            }
-            col /= ns as f32;
 
-            col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
+    let pixels: Vec<u8> = (0..HEIGHT)
+        .into_par_iter()
+        .rev()
+        .flat_map(|j| {
+            (0..WIDTH)
+                .into_par_iter()
+                .map_init(rand::thread_rng, |rng, i| {
+                    let mut col = Vec3::zero();
+                    for _ in 0..ns {
+                        let u = (i as f32 + rng.gen_range(0., 1.)) / WIDTH as f32;
+                        let v = (j as f32 + rng.gen_range(0., 1.)) / HEIGHT as f32;
+                        let r = cam.get_ray(u, v);
+                        col += color(&r, &world, 0);
+                    }
+                    col /= ns as f32;
+                    col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
 
-            let vrgb = 255.99 * col;
+                    let vrgb = 255.99 * col;
 
-            // Draw pixel
-            if let Some(pixel) = pixels.next() {
-                let rgba = [vrgb.x as u8, vrgb.y as u8, vrgb.z as u8, 0xff];
-                pixel.copy_from_slice(&rgba)
-            }
-        }
-    }
+                    vec![vrgb.x as u8, vrgb.y as u8, vrgb.z as u8, 0xff]
+                })
+                .flatten()
+                .collect::<Vec<u8>>()
+        })
+        .collect();
+
+    frame.copy_from_slice(&pixels[..]);
 }
 
 fn main() -> Result<(), Error> {
-    let scale_factor = 3;
+    let scale_factor = 2;
     let scaled_width = WIDTH * scale_factor;
     let scaled_height = HEIGHT * scale_factor;
 
@@ -128,7 +148,6 @@ fn main() -> Result<(), Error> {
     let window = {
         let size = LogicalSize::new(scaled_width as f64, scaled_height as f64);
         WindowBuilder::new()
-            .with_title("Hello Pixels")
             .with_inner_size(size)
             .with_min_inner_size(size)
             .build(&event_loop)
@@ -141,9 +160,13 @@ fn main() -> Result<(), Error> {
         Pixels::new(WIDTH, HEIGHT, surface_texture).expect("Failed to create a new Pixels instance")
     };
 
+    let start = Instant::now();
     render_to_frame(pixels.get_frame());
+    let end = Instant::now();
+    let time_to_render = end.duration_since(start);
 
-    let mut time = Instant::now();
+    window.set_title(&format!("Hello Pixels - {:?}", time_to_render));
+
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
@@ -161,18 +184,5 @@ fn main() -> Result<(), Error> {
             } => pixels.resize(new_size.width, new_size.height),
             _ => (),
         }
-
-        let now = Instant::now();
-        let _delta_time = now.duration_since(time);
-        time = now;
-
-        // let sync_rate = std::time::Duration::from_millis(15);
-        // if delta_time < sync_rate {
-        //     std::thread::sleep(sync_rate - delta_time);
-        // }
-
-        // let title = format!("Hello Pixels - {:?}", delta_time);
-        // window.set_title(&title);
-        // window.request_redraw();
     });
 }
