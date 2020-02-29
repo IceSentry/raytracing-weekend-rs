@@ -4,4 +4,4 @@ Rust implementation of <https://raytracing.github.io/books/RayTracingInOneWeeken
 
 Unlike the book, this output the result directly to a window in realtime by using the pixels library.
 
-Currently at chapter 6
+Currently at chapter 9
