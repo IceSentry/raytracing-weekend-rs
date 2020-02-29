@@ -50,118 +50,76 @@ impl Vec3 {
     }
 }
 
-impl ops::Add<Vec3> for Vec3 {
-    type Output = Vec3;
+impl_op!(+ |a: Vec3, b: Vec3| -> Vec3 { 
+    Vec3 {
+        x: a.x + b.x, 
+        y: a.y + b.y, 
+        z: a.z + b.z
+    } 
+});
 
-    fn add(self, rhs: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-            z: self.z + rhs.z,
-        }
+impl_op!(+= |a: &mut Vec3, b: Vec3| { 
+    *a = *a + b
+});
+
+impl_op!(-|a: Vec3, b: Vec3| -> Vec3 {
+    Vec3 {
+        x: a.x - b.x,
+        y: a.y - b.y,
+        z: a.z - b.z,
     }
-}
+});
 
-impl ops::AddAssign<Vec3> for Vec3 {
-    fn add_assign(&mut self, rhs: Self) {
-        *self = *self + rhs
+impl_op!(-= |a: &mut Vec3, b: Vec3| { 
+    *a = *a - b
+});
+
+impl_op!(*|a: Vec3, b: Vec3| -> Vec3 {
+    Vec3 {
+        x: a.x * b.x,
+        y: a.y * b.y,
+        z: a.z * b.z,
     }
-}
+});
 
-impl ops::Sub<Vec3> for Vec3 {
-    type Output = Vec3;
+impl_op!(*= |a: &mut Vec3, b: Vec3| { 
+    *a = *a * b
+});
 
-    fn sub(self, rhs: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-            z: self.z - rhs.z,
-        }
+impl_op!(*|a: Vec3, b: f32| -> Vec3 {
+    Vec3 {
+        x: a.x * b,
+        y: a.y * b,
+        z: a.z * b,
     }
-}
+});
 
-impl ops::SubAssign<Vec3> for Vec3 {
-    fn sub_assign(&mut self, rhs: Vec3) {
-        *self = *self - rhs
+impl_op!(*= |a: &mut Vec3, b: f32| { 
+    *a = *a * b
+});
+
+impl_op!(*|a: f32, b: Vec3| -> Vec3 { b * a });
+
+impl_op!(/|a: Vec3, b: Vec3| -> Vec3 {
+    Vec3 {
+        x: a.x / b.x,
+        y: a.y / b.y,
+        z: a.z / b.z,
     }
-}
+});
 
-impl ops::Mul<Vec3> for Vec3 {
-    type Output = Vec3;
-
-    fn mul(self, rhs: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x * rhs.x,
-            y: self.y * rhs.y,
-            z: self.z * rhs.z,
-        }
+impl_op!(/|a: Vec3, b: f32| -> Vec3 {
+    Vec3 {
+        x: a.x / b,
+        y: a.y / b,
+        z: a.z / b,
     }
-}
+});
 
-impl ops::MulAssign<Vec3> for Vec3 {
-    fn mul_assign(&mut self, rhs: Vec3) {
-        *self = *self * rhs
-    }
-}
+impl_op!(/= |a: &mut Vec3, b: f32| { 
+    *a = *a / b
+});
 
-impl ops::Mul<f32> for Vec3 {
-    type Output = Vec3;
-
-    fn mul(self, rhs: f32) -> Vec3 {
-        Vec3 {
-            x: self.x * rhs,
-            y: self.y * rhs,
-            z: self.z * rhs,
-        }
-    }
-}
-
-impl ops::MulAssign<f32> for Vec3 {
-    fn mul_assign(&mut self, rhs: f32) {
-        *self = *self * rhs
-    }
-}
-
-impl ops::Mul<Vec3> for f32 {
-    type Output = Vec3;
-
-    fn mul(self, rhs: Vec3) -> Vec3 {
-        rhs * self
-    }
-}
-
-impl ops::Div<Vec3> for Vec3 {
-    type Output = Vec3;
-
-    fn div(self, rhs: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x / rhs.x,
-            y: self.y / rhs.y,
-            z: self.z / rhs.z,
-        }
-    }
-}
-
-impl ops::Div<f32> for Vec3 {
-    type Output = Vec3;
-
-    fn div(self, rhs: f32) -> Vec3 {
-        Vec3 {
-            x: self.x / rhs,
-            y: self.y / rhs,
-            z: self.z / rhs,
-        }
-    }
-}
-
-impl ops::DivAssign<Vec3> for Vec3 {
-    fn div_assign(&mut self, rhs: Vec3) {
-        *self = *self / rhs
-    }
-}
-
-impl ops::DivAssign<f32> for Vec3 {
-    fn div_assign(&mut self, rhs: f32) {
-        *self = *self / rhs
-    }
-}
+impl_op!(/= |a: &mut Vec3, b: Vec3| { 
+    *a = *a / b
+});
