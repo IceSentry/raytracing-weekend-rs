@@ -33,6 +33,30 @@ use crate::{
 const WIDTH: u32 = 400;
 const HEIGHT: u32 = 200;
 
+fn _color_iterative(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
+    let mut local_depth = depth;
+    let mut col = {
+        let unit_direction = r.direction.unit();
+        let t = 0.5 * (unit_direction.y + 1.0);
+        (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0)
+    };
+    let mut rr = *r;
+
+    while local_depth < 50 {
+        match world.hit(&rr, 0.0001, f32::MAX) {
+            Some(hit) => {
+                if let Some((scattered, attenuation)) = scatter(&rr, &hit) {
+                    rr = scattered;
+                    col = attenuation * col;
+                }
+            }
+            None => break,
+        }
+        local_depth += 1;
+    }
+    col
+}
+
 fn color(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
     match world.hit(r, 0.0001, f32::MAX) {
         Some(hit) => {
