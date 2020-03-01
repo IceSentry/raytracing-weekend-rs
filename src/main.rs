@@ -75,10 +75,9 @@ fn color(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
     }
 }
 
-fn render_to_frame(frame: &mut [u8]) {
-    let ns = 100;
-    let cam = Camera::new();
-    let world = HittableList {
+fn init_world() -> HittableList {
+    let R = (std::f32::consts::PI / 4.).cos();
+    HittableList {
         list: vec![
             Box::new(Sphere {
                 center: Vec3::new(0., 0., -1.),
@@ -112,8 +111,34 @@ fn render_to_frame(frame: &mut [u8]) {
                 radius: -0.45,
                 mat: Material::Dielectric { ref_idx: 1.5 },
             }),
+            // Box::new(Sphere {
+            //     center: Vec3::new(-R, 0., -1.),
+            //     radius: R,
+            //     mat: Material::Lambertian {
+            //         albedo: Vec3::new(0., 0., 1.),
+            //     },
+            // }),
+            // Box::new(Sphere {
+            //     center: Vec3::new(R, 0., -1.),
+            //     radius: R,
+            //     mat: Material::Lambertian {
+            //         albedo: Vec3::new(1., 0., 0.),
+            //     },
+            // }),
         ],
-    };
+    }
+}
+
+fn render_to_frame(frame: &mut [u8]) {
+    let ns = 100;
+    let cam = Camera::new(
+        Vec3::new(-2., 2., 1.),
+        Vec3::new(0., 0., -1.),
+        Vec3::new(0., 1., 0.),
+        90.,
+        WIDTH as f32 / HEIGHT as f32,
+    );
+    let world = init_world();
 
     let pixels: Vec<u8> = (0..HEIGHT)
         .into_par_iter()
