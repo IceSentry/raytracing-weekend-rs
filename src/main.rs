@@ -84,7 +84,7 @@ fn render_to_frame(frame: &mut [u8]) {
                 center: Vec3::new(0., 0., -1.),
                 radius: 0.5,
                 mat: Material::Lambertian {
-                    albedo: Vec3::new(0.8, 0.3, 0.3),
+                    albedo: Vec3::new(0.1, 0.2, 0.5),
                 },
             }),
             Box::new(Sphere {
@@ -99,16 +99,18 @@ fn render_to_frame(frame: &mut [u8]) {
                 radius: 0.5,
                 mat: Material::Metal {
                     albedo: Vec3::new(0.8, 0.6, 0.2),
-                    fuzziness: 1.,
+                    fuzziness: 0.,
                 },
             }),
             Box::new(Sphere {
                 center: Vec3::new(-1., 0., -1.),
                 radius: 0.5,
-                mat: Material::Metal {
-                    albedo: Vec3::new(0.8, 0.8, 0.8),
-                    fuzziness: 0.3,
-                },
+                mat: Material::Dielectric { ref_idx: 1.5 },
+            }),
+            Box::new(Sphere {
+                center: Vec3::new(-1., 0., -1.),
+                radius: -0.45,
+                mat: Material::Dielectric { ref_idx: 1.5 },
             }),
         ],
     };

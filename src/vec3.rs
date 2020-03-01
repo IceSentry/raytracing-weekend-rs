@@ -1,4 +1,4 @@
-use std::ops;
+use std::{ops, ops::Neg};
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct Vec3 {
@@ -123,3 +123,11 @@ impl_op!(/= |a: &mut Vec3, b: f32| {
 impl_op!(/= |a: &mut Vec3, b: Vec3| { 
     *a = *a / b
 });
+
+impl Neg for Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Self::Output {
+        self * -1.
+    }
+}

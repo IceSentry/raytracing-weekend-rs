@@ -46,3 +46,13 @@ impl Hittable for Sphere {
         None
     }
 }
+
+impl Sphere {
+    pub fn new_boxed(center: Vec3, radius: f32, mat: Material) -> Box<Sphere> {
+        Box::new(Sphere {
+            center,
+            radius,
+            mat,
+        })
+    }
+}
