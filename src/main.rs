@@ -64,7 +64,6 @@ fn init_world(rng: &mut ThreadRng) -> HittableList {
 
     (-11..11).for_each(|a| {
         (-11..11).for_each(|b| {
-            let choose_mat = random_double(rng);
             let center = Vec3::new(
                 a as f32 + 0.9 * random_double(rng),
                 0.2,
@@ -72,25 +71,23 @@ fn init_world(rng: &mut ThreadRng) -> HittableList {
             );
 
             if (center - Vec3::new(4., 0.2, 0.)).norm() > 0.9 {
-                let mat = if choose_mat < 0.8 {
-                    Material::Lambertian {
+                let mat = match random_double(rng) {
+                    x if (0.0..0.8).contains(&x) => Material::Lambertian {
                         albedo: Vec3::new(
                             random_double(rng) * random_double(rng),
                             random_double(rng) * random_double(rng),
                             random_double(rng) * random_double(rng),
                         ),
-                    }
-                } else if choose_mat < 0.95 {
-                    Material::Metal {
+                    },
+                    x if (0.8..0.95).contains(&x) => Material::Metal {
                         albedo: Vec3::new(
                             0.5 * (1. + random_double(rng)),
                             0.5 * (1. + random_double(rng)),
                             0.5 * (1. + random_double(rng)),
                         ),
                         fuzziness: 0.5 * random_double(rng),
-                    }
-                } else {
-                    Material::Dielectric { ref_idx: 1.5 }
+                    },
+                    _ => Material::Dielectric { ref_idx: 1.5 },
                 };
 
                 world.list.push(Box::new(Sphere {
@@ -133,6 +130,7 @@ fn init_window(event_loop: &EventLoop<()>, scale: u32) -> winit::window::Window 
 
     let size = LogicalSize::new(scaled_width as f64, scaled_height as f64);
     WindowBuilder::new()
+        .with_title("Rendering...")
         .with_inner_size(size)
         .with_min_inner_size(size)
         .build(&event_loop)
@@ -160,7 +158,7 @@ fn main() -> Result<(), Error> {
     let end = Instant::now();
     let time_to_render = end.duration_since(start);
 
-    window.set_title(&format!("Hello Pixels - {:?}", time_to_render));
+    window.set_title(&format!("Completed in {:?}", time_to_render));
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
