@@ -1,5 +1,5 @@
 use crate::{hittable::HitRecord, random::random_double, ray::Ray, vec3::Vec3};
-use rand::{rngs::ThreadRng, Rng};
+use rand::rngs::ThreadRng;
 
 #[derive(Clone, Copy)]
 pub enum Material {
