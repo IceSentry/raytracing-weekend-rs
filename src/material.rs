@@ -1,5 +1,5 @@
-use crate::{hittable::HitRecord, ray::Ray, vec3::Vec3};
-use rand::Rng;
+use crate::{hittable::HitRecord, random::random_double, ray::Ray, vec3::Vec3};
+use rand::{rngs::ThreadRng, Rng};
 
 #[derive(Clone, Copy)]
 pub enum Material {
@@ -29,40 +29,33 @@ fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2. * v.dot(n) * n
 }
 
-fn random_in_unit_sphere() -> Vec3 {
-    let mut rng = rand::thread_rng();
-
+fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
     loop {
-        let p =
-            2.0 * Vec3::new(
-                rng.gen_range(0., 1.),
-                rng.gen_range(0., 1.),
-                rng.gen_range(0., 1.),
-            ) - Vec3::new(1., 1., 1.);
+        let p = 2.0 * Vec3::new(random_double(rng), random_double(rng), random_double(rng))
+            - Vec3::new(1., 1., 1.);
         if p.squared_norm() < 1. {
             return p;
         }
     }
 }
 
-pub fn scatter(r_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vec3)> {
+pub fn scatter(r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<(Ray, Vec3)> {
     match rec.mat {
         Material::Lambertian { albedo } => {
-            let target = rec.p + rec.normal + random_in_unit_sphere();
+            let target = rec.p + rec.normal + random_in_unit_sphere(rng);
             Some((Ray::new(rec.p, target - rec.p), albedo))
         }
         Material::Metal { albedo, fuzziness } => {
             let fuzz = if fuzziness < 1. { fuzziness } else { 1. };
 
             let reflected = reflect(r_in.direction.unit(), rec.normal);
-            let scattered = Ray::new(rec.p, reflected + fuzz * random_in_unit_sphere());
+            let scattered = Ray::new(rec.p, reflected + fuzz * random_in_unit_sphere(rng));
             if scattered.direction.dot(rec.normal) > 0. {
                 return Some((scattered, albedo));
             }
             None
         }
         Material::Dielectric { ref_idx } => {
-            let mut rng = rand::thread_rng();
             let outward_normal: Vec3;
             let reflected = reflect(r_in.direction, rec.normal);
             let ni_over_nt: f32;
@@ -81,7 +74,7 @@ pub fn scatter(r_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vec3)> {
 
             let scattered = match refract(r_in.direction, outward_normal, ni_over_nt) {
                 Some(refracted) => {
-                    if rng.gen_range(0., 1.) > schlick(cosine, ref_idx) {
+                    if random_double(rng) > schlick(cosine, ref_idx) {
                         refracted
                     } else {
                         reflected

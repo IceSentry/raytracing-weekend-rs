@@ -1,12 +1,10 @@
 #[macro_use]
 extern crate impl_ops;
 
-use std::f32;
 use std::time::Instant;
 
 use pixels::{wgpu::Surface, Error, Pixels, SurfaceTexture};
-use rand::Rng;
-use rayon::prelude::*;
+use rand::rngs::ThreadRng;
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
@@ -17,176 +15,148 @@ use winit::{
 mod camera;
 mod hittable;
 mod material;
+mod random;
 mod ray;
+mod renderer;
 mod sphere;
 mod vec3;
 
 use crate::{
-    camera::Camera,
-    hittable::{Hittable, HittableList},
-    material::{scatter, Material},
-    ray::Ray,
-    sphere::Sphere,
-    vec3::Vec3,
+    camera::Camera, hittable::HittableList, material::Material, random::random_double,
+    renderer::render, sphere::Sphere, vec3::Vec3,
 };
 
-const WIDTH: u32 = 1280;
-const HEIGHT: u32 = 720;
+const WIDTH: u32 = 1200;
+const HEIGHT: u32 = 800;
 
-fn _color_iterative(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
-    let mut local_depth = depth;
-    let mut col = {
-        let unit_direction = r.direction.unit();
-        let t = 0.5 * (unit_direction.y + 1.0);
-        (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0)
-    };
-    let mut rr = *r;
-
-    while local_depth < 50 {
-        match world.hit(&rr, 0.0001, f32::MAX) {
-            Some(hit) => {
-                if let Some((scattered, attenuation)) = scatter(&rr, &hit) {
-                    rr = scattered;
-                    col = attenuation * col;
-                }
-            }
-            None => break,
-        }
-        local_depth += 1;
-    }
-    col
-}
-
-fn color(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
-    match world.hit(r, 0.0001, f32::MAX) {
-        Some(hit) => {
-            if depth < 50 {
-                if let Some((scattered, attenuation)) = scatter(r, &hit) {
-                    return attenuation * color(&scattered, world, depth + 1);
-                }
-            }
-            Vec3::zero()
-        }
-        None => {
-            let unit_direction = r.direction.unit();
-            let t = 0.5 * (unit_direction.y + 1.0);
-            (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0)
-        }
-    }
-}
-
-fn init_world() -> HittableList {
-    HittableList {
+fn init_world(rng: &mut ThreadRng) -> HittableList {
+    let mut world = HittableList {
         list: vec![
             Box::new(Sphere {
-                center: Vec3::new(0., 0., -1.),
-                radius: 0.5,
+                center: Vec3::new(0., -1000., 0.),
+                radius: 1000.,
                 mat: Material::Lambertian {
-                    albedo: Vec3::new(0.1, 0.2, 0.5),
+                    albedo: Vec3::new(0.5, 0.5, 0.5),
                 },
             }),
             Box::new(Sphere {
-                center: Vec3::new(0., -100.5, -1.),
-                radius: 100.,
+                center: Vec3::new(0., 1., 0.),
+                radius: 1.,
+                mat: Material::Dielectric { ref_idx: 1.5 },
+            }),
+            Box::new(Sphere {
+                center: Vec3::new(-4., 1., 0.),
+                radius: 1.,
                 mat: Material::Lambertian {
-                    albedo: Vec3::new(0.8, 0.8, 0.),
+                    albedo: Vec3::new(0.4, 0.2, 0.1),
                 },
             }),
             Box::new(Sphere {
-                center: Vec3::new(1., 0., -1.),
-                radius: 0.5,
+                center: Vec3::new(4., 1., 0.),
+                radius: 1.,
                 mat: Material::Metal {
-                    albedo: Vec3::new(0.8, 0.6, 0.2),
+                    albedo: Vec3::new(0.7, 0.6, 0.5),
                     fuzziness: 0.,
                 },
             }),
-            Box::new(Sphere {
-                center: Vec3::new(-1., 0., -1.),
-                radius: 0.5,
-                mat: Material::Dielectric { ref_idx: 1.5 },
-            }),
-            Box::new(Sphere {
-                center: Vec3::new(-1., 0., -1.),
-                radius: -0.45,
-                mat: Material::Dielectric { ref_idx: 1.5 },
-            }),
         ],
-    }
-}
-
-fn render_to_frame(frame: &mut [u8]) {
-    let ns = 100;
-
-    let cam = {
-        let lookfrom = Vec3::new(3., 3., 2.);
-        let lookat = Vec3::new(0., 0., -1.);
-        let dist_to_focus = (lookfrom - lookat).norm();
-        Camera::new(
-            lookfrom,
-            lookat,
-            Vec3::new(0., 1., 0.),
-            20.,
-            WIDTH as f32 / HEIGHT as f32,
-            2.0,
-            dist_to_focus,
-        )
     };
 
-    let world = init_world();
+    (-11..11).for_each(|a| {
+        (-11..11).for_each(|b| {
+            let choose_mat = random_double(rng);
+            let center = Vec3::new(
+                a as f32 + 0.9 * random_double(rng),
+                0.2,
+                b as f32 + 0.9 * random_double(rng),
+            );
 
-    let pixels: Vec<u8> = (0..HEIGHT)
-        .into_par_iter()
-        .rev()
-        .flat_map(|j| {
-            (0..WIDTH)
-                .into_par_iter()
-                .map_init(rand::thread_rng, |rng, i| {
-                    let mut col = Vec3::zero();
-                    for _ in 0..ns {
-                        let u = (i as f32 + rng.gen_range(0., 1.)) / WIDTH as f32;
-                        let v = (j as f32 + rng.gen_range(0., 1.)) / HEIGHT as f32;
-                        let r = cam.get_ray(u, v);
-                        col += color(&r, &world, 0);
+            if (center - Vec3::new(4., 0.2, 0.)).norm() > 0.9 {
+                let mat = if choose_mat < 0.8 {
+                    Material::Lambertian {
+                        albedo: Vec3::new(
+                            random_double(rng) * random_double(rng),
+                            random_double(rng) * random_double(rng),
+                            random_double(rng) * random_double(rng),
+                        ),
                     }
-                    col /= ns as f32;
-                    col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
+                } else if choose_mat < 0.95 {
+                    Material::Metal {
+                        albedo: Vec3::new(
+                            0.5 * (1. + random_double(rng)),
+                            0.5 * (1. + random_double(rng)),
+                            0.5 * (1. + random_double(rng)),
+                        ),
+                        fuzziness: 0.5 * random_double(rng),
+                    }
+                } else {
+                    Material::Dielectric { ref_idx: 1.5 }
+                };
 
-                    let vrgb = 255.99 * col;
+                world.list.push(Box::new(Sphere {
+                    center,
+                    radius: 0.2,
+                    mat,
+                }));
+            }
+        });
+    });
 
-                    vec![vrgb.x as u8, vrgb.y as u8, vrgb.z as u8, 0xff]
-                })
-                .flatten()
-                .collect::<Vec<u8>>()
-        })
-        .collect();
+    world
+}
 
+fn init_camera() -> Camera {
+    let lookfrom = Vec3::new(13., 2., 3.);
+    let lookat = Vec3::new(0., 0., 0.);
+    let dist_to_focus = 10.;
+    let aperture = 0.1;
+    Camera::new(
+        lookfrom,
+        lookat,
+        Vec3::new(0., 1., 0.),
+        20.,
+        WIDTH as f32 / HEIGHT as f32,
+        aperture,
+        dist_to_focus,
+    )
+}
+
+fn init_pixels(window: &winit::window::Window, scale: u32) -> Pixels {
+    let surface = Surface::create(window);
+    let surface_texture = SurfaceTexture::new(WIDTH * scale, HEIGHT * scale, surface);
+    Pixels::new(WIDTH, HEIGHT, surface_texture).expect("Failed to create a new Pixels instance")
+}
+
+fn init_window(event_loop: &EventLoop<()>, scale: u32) -> winit::window::Window {
+    let scaled_width = WIDTH * scale;
+    let scaled_height = HEIGHT * scale;
+
+    let size = LogicalSize::new(scaled_width as f64, scaled_height as f64);
+    WindowBuilder::new()
+        .with_inner_size(size)
+        .with_min_inner_size(size)
+        .build(&event_loop)
+        .unwrap()
+}
+
+fn render_to_frame(cam: Camera, world: HittableList, ns: i32, frame: &mut [u8]) {
+    let pixels = render(cam, world, ns);
     frame.copy_from_slice(&pixels[..]);
 }
 
 fn main() -> Result<(), Error> {
-    let scale_factor = 1;
-    let scaled_width = WIDTH * scale_factor;
-    let scaled_height = HEIGHT * scale_factor;
+    let ns = 10;
+    let scale = 1;
+
+    let cam = init_camera();
+    let world = init_world(&mut rand::thread_rng());
 
     let event_loop = EventLoop::new();
-
-    let window = {
-        let size = LogicalSize::new(scaled_width as f64, scaled_height as f64);
-        WindowBuilder::new()
-            .with_inner_size(size)
-            .with_min_inner_size(size)
-            .build(&event_loop)
-            .unwrap()
-    };
-
-    let mut pixels = {
-        let surface = Surface::create(&window);
-        let surface_texture = SurfaceTexture::new(scaled_width, scaled_height, surface);
-        Pixels::new(WIDTH, HEIGHT, surface_texture).expect("Failed to create a new Pixels instance")
-    };
+    let window = init_window(&event_loop, scale);
+    let mut pixels = init_pixels(&window, scale);
 
     let start = Instant::now();
-    render_to_frame(pixels.get_frame());
+    render_to_frame(cam, world, ns, pixels.get_frame());
     let end = Instant::now();
     let time_to_render = end.duration_since(start);
 
