@@ -30,8 +30,8 @@ use crate::{
     vec3::Vec3,
 };
 
-const WIDTH: u32 = 400;
-const HEIGHT: u32 = 200;
+const WIDTH: u32 = 1280;
+const HEIGHT: u32 = 720;
 
 fn _color_iterative(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
     let mut local_depth = depth;
@@ -76,7 +76,6 @@ fn color(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
 }
 
 fn init_world() -> HittableList {
-    let R = (std::f32::consts::PI / 4.).cos();
     HittableList {
         list: vec![
             Box::new(Sphere {
@@ -111,33 +110,28 @@ fn init_world() -> HittableList {
                 radius: -0.45,
                 mat: Material::Dielectric { ref_idx: 1.5 },
             }),
-            // Box::new(Sphere {
-            //     center: Vec3::new(-R, 0., -1.),
-            //     radius: R,
-            //     mat: Material::Lambertian {
-            //         albedo: Vec3::new(0., 0., 1.),
-            //     },
-            // }),
-            // Box::new(Sphere {
-            //     center: Vec3::new(R, 0., -1.),
-            //     radius: R,
-            //     mat: Material::Lambertian {
-            //         albedo: Vec3::new(1., 0., 0.),
-            //     },
-            // }),
         ],
     }
 }
 
 fn render_to_frame(frame: &mut [u8]) {
     let ns = 100;
-    let cam = Camera::new(
-        Vec3::new(-2., 2., 1.),
-        Vec3::new(0., 0., -1.),
-        Vec3::new(0., 1., 0.),
-        90.,
-        WIDTH as f32 / HEIGHT as f32,
-    );
+
+    let cam = {
+        let lookfrom = Vec3::new(3., 3., 2.);
+        let lookat = Vec3::new(0., 0., -1.);
+        let dist_to_focus = (lookfrom - lookat).norm();
+        Camera::new(
+            lookfrom,
+            lookat,
+            Vec3::new(0., 1., 0.),
+            20.,
+            WIDTH as f32 / HEIGHT as f32,
+            2.0,
+            dist_to_focus,
+        )
+    };
+
     let world = init_world();
 
     let pixels: Vec<u8> = (0..HEIGHT)
@@ -170,7 +164,7 @@ fn render_to_frame(frame: &mut [u8]) {
 }
 
 fn main() -> Result<(), Error> {
-    let scale_factor = 2;
+    let scale_factor = 1;
     let scaled_width = WIDTH * scale_factor;
     let scaled_height = HEIGHT * scale_factor;
 
