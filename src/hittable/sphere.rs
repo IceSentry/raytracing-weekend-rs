@@ -21,26 +21,25 @@ impl Hittable for Sphere {
         let discriminant = b * b - a * c;
 
         if discriminant > 0. {
-            let mut temp = (-b - discriminant.sqrt()) / a;
-            if temp < t_max && temp > t_min {
-                let p = r.point_at(temp);
-                return Some(HitRecord {
-                    t: temp,
-                    p,
-                    normal: (p - self.center) / self.radius,
+            let create_rec = |t: f32| -> HitRecord {
+                let point = r.point_at(t);
+                HitRecord {
+                    t,
+                    point,
+                    normal: (point - self.center) / self.radius,
                     mat: self.mat,
-                });
+                }
+            };
+
+            let mut t = (-b - discriminant.sqrt()) / a;
+
+            if t < t_max && t > t_min {
+                return Some(create_rec(t));
             }
 
-            temp = (-b + discriminant.sqrt()) / a;
-            if temp < t_max && temp > t_min {
-                let p = r.point_at(temp);
-                return Some(HitRecord {
-                    t: temp,
-                    p,
-                    normal: (p - self.center) / self.radius,
-                    mat: self.mat,
-                });
+            t = (-b + discriminant.sqrt()) / a;
+            if t < t_max && t > t_min {
+                return Some(create_rec(t));
             }
         }
         None

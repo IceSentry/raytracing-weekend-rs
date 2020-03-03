@@ -39,17 +39,21 @@ fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
     }
 }
 
-pub fn scatter(r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<(Ray, Vec3)> {
+pub fn scatter(ray_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<(Ray, Vec3)> {
     match rec.mat {
         Material::Lambertian { albedo } => {
-            let target = rec.p + rec.normal + random_in_unit_sphere(rng);
-            Some((Ray::new(rec.p, target - rec.p), albedo))
+            let target = rec.point + rec.normal + random_in_unit_sphere(rng);
+            Some((Ray::new(rec.point, target - rec.point, 0.), albedo))
         }
         Material::Metal { albedo, fuzziness } => {
             let fuzz = if fuzziness < 1. { fuzziness } else { 1. };
 
-            let reflected = reflect(r_in.direction.unit(), rec.normal);
-            let scattered = Ray::new(rec.p, reflected + fuzz * random_in_unit_sphere(rng));
+            let reflected = reflect(ray_in.direction.unit(), rec.normal);
+            let scattered = Ray::new(
+                rec.point,
+                reflected + fuzz * random_in_unit_sphere(rng),
+                ray_in.time,
+            );
             if scattered.direction.dot(rec.normal) > 0. {
                 return Some((scattered, albedo));
             }
@@ -57,22 +61,22 @@ pub fn scatter(r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<(Ray,
         }
         Material::Dielectric { ref_idx } => {
             let outward_normal: Vec3;
-            let reflected = reflect(r_in.direction, rec.normal);
+            let reflected = reflect(ray_in.direction, rec.normal);
             let ni_over_nt: f32;
             let attenuation = Vec3::new(1., 1., 1.);
             let cosine: f32;
 
-            if r_in.direction.dot(rec.normal) > 0. {
+            if ray_in.direction.dot(rec.normal) > 0. {
                 outward_normal = -rec.normal;
                 ni_over_nt = ref_idx;
-                cosine = ref_idx * r_in.direction.dot(rec.normal) / r_in.direction.norm()
+                cosine = ref_idx * ray_in.direction.dot(rec.normal) / ray_in.direction.norm()
             } else {
                 outward_normal = rec.normal;
                 ni_over_nt = 1. / ref_idx;
-                cosine = -r_in.direction.dot(rec.normal) / r_in.direction.norm()
+                cosine = -ray_in.direction.dot(rec.normal) / ray_in.direction.norm()
             }
 
-            let scattered = match refract(r_in.direction, outward_normal, ni_over_nt) {
+            let scattered = match refract(ray_in.direction, outward_normal, ni_over_nt) {
                 Some(refracted) => {
                     if random_double(rng) > schlick(cosine, ref_idx) {
                         refracted
@@ -83,7 +87,7 @@ pub fn scatter(r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<(Ray,
                 None => reflected,
             };
 
-            Some((Ray::new(rec.p, scattered), attenuation))
+            Some((Ray::new(rec.point, scattered, 0.), attenuation))
         }
     }
 }

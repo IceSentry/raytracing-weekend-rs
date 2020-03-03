@@ -1,8 +1,11 @@
 use crate::{material::Material, ray::Ray, vec3::Vec3};
 
+pub mod moving_sphere;
+pub mod sphere;
+
 pub struct HitRecord {
     pub t: f32,
-    pub p: Vec3,
+    pub point: Vec3,
     pub normal: Vec3,
     pub mat: Material,
 }

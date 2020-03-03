@@ -18,12 +18,15 @@ mod material;
 mod random;
 mod ray;
 mod renderer;
-mod sphere;
 mod vec3;
 
 use crate::{
-    camera::Camera, hittable::HittableList, material::Material, random::random_double,
-    renderer::render, sphere::Sphere, vec3::Vec3,
+    camera::Camera,
+    hittable::{moving_sphere::MovingSphere, sphere::Sphere, HittableList},
+    material::Material,
+    random::random_double,
+    renderer::render,
+    vec3::Vec3,
 };
 
 const WIDTH: u32 = 1200;
@@ -71,7 +74,7 @@ fn init_world(rng: &mut ThreadRng) -> HittableList {
             );
 
             if (center - Vec3::new(4., 0.2, 0.)).norm() > 0.9 {
-                let mat = match random_double(rng) {
+                let material = match random_double(rng) {
                     x if (0.0..0.8).contains(&x) => Material::Lambertian {
                         albedo: Vec3::new(
                             random_double(rng) * random_double(rng),
@@ -90,11 +93,22 @@ fn init_world(rng: &mut ThreadRng) -> HittableList {
                     _ => Material::Dielectric { ref_idx: 1.5 },
                 };
 
-                world.list.push(Box::new(Sphere {
-                    center,
-                    radius: 0.2,
-                    mat,
-                }));
+                let radius = 0.2;
+                world.list.push(match material {
+                    Material::Lambertian { .. } => Box::new(MovingSphere {
+                        center0: center,
+                        center1: center + Vec3::new(0., 0.5 * random_double(rng), 0.),
+                        time0: 0.,
+                        time1: 1.0,
+                        radius,
+                        material,
+                    }),
+                    _ => Box::new(Sphere {
+                        center,
+                        radius,
+                        mat: material,
+                    }),
+                });
             }
         });
     });
@@ -106,7 +120,7 @@ fn init_camera() -> Camera {
     let lookfrom = Vec3::new(13., 2., 3.);
     let lookat = Vec3::new(0., 0., 0.);
     let dist_to_focus = 10.;
-    let aperture = 0.1;
+    let aperture = 0.0;
     Camera::new(
         lookfrom,
         lookat,
@@ -115,6 +129,8 @@ fn init_camera() -> Camera {
         WIDTH as f32 / HEIGHT as f32,
         aperture,
         dist_to_focus,
+        0.,
+        1.,
     )
 }
 
@@ -143,7 +159,7 @@ fn render_to_frame(cam: Camera, world: HittableList, ns: i32, frame: &mut [u8]) 
 }
 
 fn main() -> Result<(), Error> {
-    let ns = 10;
+    let num_samples = 1;
     let scale = 1;
 
     let cam = init_camera();
@@ -154,7 +170,7 @@ fn main() -> Result<(), Error> {
     let mut pixels = init_pixels(&window, scale);
 
     let start = Instant::now();
-    render_to_frame(cam, world, ns, pixels.get_frame());
+    render_to_frame(cam, world, num_samples, pixels.get_frame());
     let end = Instant::now();
     let time_to_render = end.duration_since(start);
 
