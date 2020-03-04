@@ -134,7 +134,7 @@ pub fn random_scene(rng: &mut ThreadRng) -> Scene {
 
     Scene {
         camera: default_camera(),
-        hittables: Hittables::BvhNode(BvhNode::new(world, 0., 1., rng)),
+        hittables: Hittables::BvhNode(BvhNode::new(world, 0., 1., 0)),
     }
 }
 

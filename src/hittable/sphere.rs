@@ -1,6 +1,5 @@
-use crate::aabb::AABB;
 use crate::{
-    hittable::{HitRecord, Hittable},
+    hittable::{aabb::AABB, HitRecord, Hittable},
     material::Material,
     ray::Ray,
     vec3::Vec3,

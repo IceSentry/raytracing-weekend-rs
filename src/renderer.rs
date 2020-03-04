@@ -13,7 +13,7 @@ use crate::{
     HEIGHT, WIDTH,
 };
 
-const MAX_DEPTH: i32 = 50;
+const MAX_DEPTH: i32 = 16;
 
 fn _color_iterative(r: &Ray, world: &dyn Hittable, depth: i32, rng: &mut ThreadRng) -> Vec3 {
     let mut local_depth = depth;
@@ -24,7 +24,7 @@ fn _color_iterative(r: &Ray, world: &dyn Hittable, depth: i32, rng: &mut ThreadR
     };
     let mut rr = *r;
 
-    while local_depth < 50 {
+    while local_depth < MAX_DEPTH {
         match world.hit(&rr, 0.0001, f32::MAX) {
             Some(hit) => {
                 if let Some((scattered, attenuation)) = scatter(&rr, &hit, rng) {

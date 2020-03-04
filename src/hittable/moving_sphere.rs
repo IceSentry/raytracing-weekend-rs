@@ -1,7 +1,8 @@
-use crate::aabb::surrounding_box;
-use crate::aabb::AABB;
 use crate::{
-    hittable::{HitRecord, Hittable},
+    hittable::{
+        aabb::{surrounding_box, AABB},
+        HitRecord, Hittable,
+    },
     material::Material,
     ray::Ray,
     vec3::Vec3,

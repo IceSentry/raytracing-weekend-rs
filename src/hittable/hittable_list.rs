@@ -1,6 +1,8 @@
 use crate::{
-    aabb::{surrounding_box, AABB},
-    hittable::{HitRecord, Hittable, Hittables},
+    hittable::{
+        aabb::{surrounding_box, AABB},
+        HitRecord, Hittable, Hittables,
+    },
     ray::Ray,
 };
 

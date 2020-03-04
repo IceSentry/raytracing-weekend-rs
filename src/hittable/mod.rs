@@ -1,7 +1,7 @@
 use crate::{
-    aabb::AABB,
     hittable::{
-        bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere, sphere::Sphere,
+        aabb::AABB, bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere,
+        sphere::Sphere,
     },
     material::Material,
     ray::Ray,
@@ -9,6 +9,7 @@ use crate::{
 };
 use enum_dispatch::enum_dispatch;
 
+pub mod aabb;
 pub mod bvh_node;
 pub mod hittable_list;
 pub mod moving_sphere;

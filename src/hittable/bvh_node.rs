@@ -1,6 +1,8 @@
 use crate::{
-    aabb::{surrounding_box, AABB},
-    hittable::{HitRecord, Hittable, Hittables},
+    hittable::{
+        aabb::{surrounding_box, AABB},
+        HitRecord, Hittable, Hittables,
+    },
     random::random_double,
     ray::Ray,
 };
@@ -57,8 +59,8 @@ fn cmp_sort(a: &Hittables, b: &Hittables, index: usize) -> Ordering {
 }
 
 impl BvhNode {
-    pub fn new(list: Vec<Hittables>, time0: f32, time1: f32, rng: &mut ThreadRng) -> Self {
-        let axis = (3. * random_double(rng)) as i32;
+    pub fn new(list: Vec<Hittables>, time0: f32, time1: f32, depth: i32) -> Self {
+        let axis = depth % 3;
         let mut list = list;
         let n = list.len();
 
@@ -76,8 +78,8 @@ impl BvhNode {
                 let left_list = list[..(half as usize)].to_vec();
                 let right_list = list[(half as usize)..].to_vec();
                 (
-                    Hittables::BvhNode(BvhNode::new(left_list, time0, time1, rng)),
-                    Hittables::BvhNode(BvhNode::new(right_list, time0, time1, rng)),
+                    Hittables::BvhNode(BvhNode::new(left_list, time0, time1, depth + 1)),
+                    Hittables::BvhNode(BvhNode::new(right_list, time0, time1, depth + 1)),
                 )
             }
         };

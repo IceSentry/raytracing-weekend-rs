@@ -9,7 +9,6 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-mod aabb;
 mod camera;
 mod hittable;
 mod material;

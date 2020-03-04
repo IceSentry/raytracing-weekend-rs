@@ -47,11 +47,11 @@ impl AABB {
     pub fn hit(&self, ray: &Ray, tmin: f32, tmax: f32) -> Option<(f32, f32)> {
         let mut tmin = tmin;
         let mut tmax = tmax;
-        for a in 0..3 {
-            let inv_d = 1. / ray.direction[a];
-            let mut t0 = (self.min[a] - ray.origin[a]) * inv_d;
-            let mut t1 = (self.max[a] - ray.origin[a]) * inv_d;
-            if inv_d < 0. {
+        let inv_d = 1. / ray.direction;
+        for i in 0..3 {
+            let mut t0 = (self.min[i] - ray.origin[i]) * inv_d[i];
+            let mut t1 = (self.max[i] - ray.origin[i]) * inv_d[i];
+            if inv_d[i] < 0. {
                 mem::swap(&mut t0, &mut t1);
             }
             tmin = if t0 > tmin { t0 } else { tmin };
