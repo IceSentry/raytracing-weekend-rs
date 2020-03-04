@@ -1,3 +1,4 @@
+use crate::hittable::enums::Hittables;
 use std::f32;
 
 use rand::rngs::ThreadRng;
@@ -5,7 +6,7 @@ use rayon::prelude::*;
 
 use crate::{
     camera::Camera,
-    hittable::{Hittable, HittableList},
+    hittable::{hittable_list::HittableList, Hittable},
     material::scatter,
     random::random_double,
     ray::Ray,
@@ -39,7 +40,7 @@ fn _color_iterative(r: &Ray, world: &dyn Hittable, depth: i32, rng: &mut ThreadR
     col
 }
 
-fn color(r: &Ray, world: &dyn Hittable, depth: i32, rng: &mut ThreadRng) -> Vec3 {
+fn color(r: &Ray, world: &Hittables, depth: i32, rng: &mut ThreadRng) -> Vec3 {
     match world.hit(r, 0.0001, f32::MAX) {
         Some(hit) => {
             if depth < MAX_DEPTH {
@@ -57,7 +58,7 @@ fn color(r: &Ray, world: &dyn Hittable, depth: i32, rng: &mut ThreadRng) -> Vec3
     }
 }
 
-pub fn render(cam: Camera, world: HittableList, num_samples: i32) -> Vec<u8> {
+pub fn render(cam: Camera, world: &Hittables, num_samples: i32) -> Vec<u8> {
     (0..WIDTH * HEIGHT)
         .into_par_iter()
         .map_init(rand::thread_rng, |rng, screen_pos| {
@@ -69,7 +70,7 @@ pub fn render(cam: Camera, world: HittableList, num_samples: i32) -> Vec<u8> {
                 let u = (i as f32 + random_double(rng)) / WIDTH as f32;
                 let v = (j as f32 + random_double(rng)) / HEIGHT as f32;
                 let ray = cam.get_ray(u, v, rng);
-                col += color(&ray, &world, 0, rng);
+                col += color(&ray, world, 0, rng);
             }
             col /= num_samples as f32;
             col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());

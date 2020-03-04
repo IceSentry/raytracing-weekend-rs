@@ -1,4 +1,4 @@
-use std::{ops, ops::Neg};
+use std::{ops, ops::{Neg, Index}};
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct Vec3 {
@@ -47,6 +47,19 @@ impl Vec3 {
 
     pub fn unit(&self) -> Vec3 {
         *self / self.norm()
+    }
+}
+
+impl Index<usize> for Vec3 {
+    type Output = f32;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _=> unreachable!(),
+        }
     }
 }
 

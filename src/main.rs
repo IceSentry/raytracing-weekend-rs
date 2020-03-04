@@ -12,6 +12,7 @@ use winit::{
     window::WindowBuilder,
 };
 
+mod aabb;
 mod camera;
 mod hittable;
 mod material;
@@ -22,7 +23,7 @@ mod vec3;
 
 use crate::{
     camera::Camera,
-    hittable::{moving_sphere::MovingSphere, sphere::Sphere, HittableList},
+    hittable::{bvh_node::BvhNode, enums::Hittables, moving_sphere::MovingSphere, sphere::Sphere},
     material::Material,
     random::random_double,
     renderer::render,
@@ -32,38 +33,36 @@ use crate::{
 const WIDTH: u32 = 1200;
 const HEIGHT: u32 = 800;
 
-fn init_world(rng: &mut ThreadRng) -> HittableList {
-    let mut world = HittableList {
-        list: vec![
-            Box::new(Sphere {
-                center: Vec3::new(0., -1000., 0.),
-                radius: 1000.,
-                mat: Material::Lambertian {
-                    albedo: Vec3::new(0.5, 0.5, 0.5),
-                },
-            }),
-            Box::new(Sphere {
-                center: Vec3::new(0., 1., 0.),
-                radius: 1.,
-                mat: Material::Dielectric { ref_idx: 1.5 },
-            }),
-            Box::new(Sphere {
-                center: Vec3::new(-4., 1., 0.),
-                radius: 1.,
-                mat: Material::Lambertian {
-                    albedo: Vec3::new(0.4, 0.2, 0.1),
-                },
-            }),
-            Box::new(Sphere {
-                center: Vec3::new(4., 1., 0.),
-                radius: 1.,
-                mat: Material::Metal {
-                    albedo: Vec3::new(0.7, 0.6, 0.5),
-                    fuzziness: 0.,
-                },
-            }),
-        ],
-    };
+fn init_world(rng: &mut ThreadRng) -> Hittables {
+    let mut world = vec![
+        Hittables::Sphere(Sphere {
+            center: Vec3::new(0., -1000., 0.),
+            radius: 1000.,
+            mat: Material::Lambertian {
+                albedo: Vec3::new(0.5, 0.5, 0.5),
+            },
+        }),
+        Hittables::Sphere(Sphere {
+            center: Vec3::new(0., 1., 0.),
+            radius: 1.,
+            mat: Material::Dielectric { ref_idx: 1.5 },
+        }),
+        Hittables::Sphere(Sphere {
+            center: Vec3::new(-4., 1., 0.),
+            radius: 1.,
+            mat: Material::Lambertian {
+                albedo: Vec3::new(0.4, 0.2, 0.1),
+            },
+        }),
+        Hittables::Sphere(Sphere {
+            center: Vec3::new(4., 1., 0.),
+            radius: 1.,
+            mat: Material::Metal {
+                albedo: Vec3::new(0.7, 0.6, 0.5),
+                fuzziness: 0.,
+            },
+        }),
+    ];
 
     (-11..11).for_each(|a| {
         (-11..11).for_each(|b| {
@@ -94,8 +93,8 @@ fn init_world(rng: &mut ThreadRng) -> HittableList {
                 };
 
                 let radius = 0.2;
-                world.list.push(match material {
-                    Material::Lambertian { .. } => Box::new(MovingSphere {
+                world.push(match material {
+                    Material::Lambertian { .. } => Hittables::MovingSphere(MovingSphere {
                         center0: center,
                         center1: center + Vec3::new(0., 0.5 * random_double(rng), 0.),
                         time0: 0.,
@@ -103,7 +102,7 @@ fn init_world(rng: &mut ThreadRng) -> HittableList {
                         radius,
                         material,
                     }),
-                    _ => Box::new(Sphere {
+                    _ => Hittables::Sphere(Sphere {
                         center,
                         radius,
                         mat: material,
@@ -113,7 +112,8 @@ fn init_world(rng: &mut ThreadRng) -> HittableList {
         });
     });
 
-    world
+    // Hittables::List(HittableList { list: world })
+    Hittables::BvhNode(BvhNode::new(world, 0., 1., rng))
 }
 
 fn init_camera() -> Camera {
@@ -153,7 +153,7 @@ fn init_window(event_loop: &EventLoop<()>, scale: u32) -> winit::window::Window 
         .unwrap()
 }
 
-fn render_to_frame(cam: Camera, world: HittableList, ns: i32, frame: &mut [u8]) {
+fn render_to_frame(cam: Camera, world: &Hittables, ns: i32, frame: &mut [u8]) {
     let pixels = render(cam, world, ns);
     frame.copy_from_slice(&pixels[..]);
 }
@@ -170,7 +170,7 @@ fn main() -> Result<(), Error> {
     let mut pixels = init_pixels(&window, scale);
 
     let start = Instant::now();
-    render_to_frame(cam, world, num_samples, pixels.get_frame());
+    render_to_frame(cam, &world, num_samples, pixels.get_frame());
     let end = Instant::now();
     let time_to_render = end.duration_since(start);
 

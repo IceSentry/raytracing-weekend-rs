@@ -1,5 +1,8 @@
-use crate::{material::Material, ray::Ray, vec3::Vec3};
+use crate::{aabb::AABB, material::Material, ray::Ray, vec3::Vec3};
 
+pub mod bvh_node;
+pub mod enums;
+pub mod hittable_list;
 pub mod moving_sphere;
 pub mod sphere;
 
@@ -10,26 +13,7 @@ pub struct HitRecord {
     pub mat: Material,
 }
 
-pub trait Hittable: Sync {
+pub trait Hittable {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
-}
-
-pub struct HittableList {
-    pub list: Vec<Box<dyn Hittable>>,
-}
-
-impl Hittable for HittableList {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        let mut closest_so_far = t_max;
-        let mut result = None;
-
-        for hittable in self.list.iter() {
-            if let Some(rec) = hittable.hit(&r, t_min, closest_so_far) {
-                closest_so_far = rec.t;
-                result = Some(rec);
-            }
-        }
-
-        result
-    }
+    fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB>;
 }
