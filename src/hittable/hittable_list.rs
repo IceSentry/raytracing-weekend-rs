@@ -1,6 +1,6 @@
 use crate::{
     aabb::{surrounding_box, AABB},
-    hittable::{enums::Hittables, HitRecord, Hittable},
+    hittable::{HitRecord, Hittable, Hittables},
     ray::Ray,
 };
 
@@ -30,7 +30,7 @@ impl Hittable for HittableList {
         }
 
         let mut bounding_box: AABB;
-        match self.list[0].bounding_box(t0, t1) {
+        match self.list.first().unwrap().bounding_box(t0, t1) {
             Some(temp_box) => bounding_box = temp_box,
             None => return None,
         };

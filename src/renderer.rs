@@ -1,4 +1,3 @@
-use crate::hittable::enums::Hittables;
 use std::f32;
 
 use rand::rngs::ThreadRng;
@@ -6,7 +5,7 @@ use rayon::prelude::*;
 
 use crate::{
     camera::Camera,
-    hittable::{hittable_list::HittableList, Hittable},
+    hittable::{Hittable, Hittables},
     material::scatter,
     random::random_double,
     ray::Ray,

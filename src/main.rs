@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate impl_ops;
+// #[macro_use]
+// extern crate enum_dispatch;
 
 use std::time::Instant;
 
@@ -23,7 +25,7 @@ mod vec3;
 
 use crate::{
     camera::Camera,
-    hittable::{bvh_node::BvhNode, enums::Hittables, moving_sphere::MovingSphere, sphere::Sphere},
+    hittable::{bvh_node::BvhNode, moving_sphere::MovingSphere, sphere::Sphere, Hittables},
     material::Material,
     random::random_double,
     renderer::render,
@@ -159,7 +161,7 @@ fn render_to_frame(cam: Camera, world: &Hittables, ns: i32, frame: &mut [u8]) {
 }
 
 fn main() -> Result<(), Error> {
-    let num_samples = 1;
+    let num_samples = 10;
     let scale = 1;
 
     let cam = init_camera();

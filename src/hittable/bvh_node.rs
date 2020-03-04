@@ -1,9 +1,7 @@
-use crate::aabb::surrounding_box;
-use crate::hittable::enums::Hittables;
-use crate::random::random_double;
 use crate::{
-    aabb::AABB,
-    hittable::{HitRecord, Hittable},
+    aabb::{surrounding_box, AABB},
+    hittable::{HitRecord, Hittable, Hittables},
+    random::random_double,
     ray::Ray,
 };
 use rand::rngs::ThreadRng;
