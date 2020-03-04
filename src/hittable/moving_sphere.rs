@@ -3,7 +3,7 @@ use crate::{
         aabb::{surrounding_box, AABB},
         HitRecord, Hittable,
     },
-    material::Material,
+    material::MaterialType,
     ray::Ray,
     vec3::Vec3,
 };
@@ -15,7 +15,7 @@ pub struct MovingSphere {
     pub time0: f32,
     pub time1: f32,
     pub radius: f32,
-    pub material: Material,
+    pub material: MaterialType,
 }
 
 impl Hittable for MovingSphere {

@@ -6,7 +6,7 @@ use rayon::prelude::*;
 use crate::{
     camera::Camera,
     hittable::{Hittable, Hittables},
-    material::scatter,
+    material::Material,
     random::random_double,
     ray::Ray,
     vec3::Vec3,
@@ -27,7 +27,7 @@ fn _color_iterative(r: &Ray, world: &dyn Hittable, depth: i32, rng: &mut ThreadR
     while local_depth < MAX_DEPTH {
         match world.hit(&rr, 0.0001, f32::MAX) {
             Some(hit) => {
-                if let Some((scattered, attenuation)) = scatter(&rr, &hit, rng) {
+                if let Some((scattered, attenuation)) = hit.mat.scatter(&rr, &hit, rng) {
                     rr = scattered;
                     col = attenuation * col;
                 }
@@ -43,7 +43,7 @@ fn color(r: &Ray, world: &Hittables, depth: i32, rng: &mut ThreadRng) -> Vec3 {
     match world.hit(r, 0.0001, f32::MAX) {
         Some(hit) => {
             if depth < MAX_DEPTH {
-                if let Some((scattered, attenuation)) = scatter(r, &hit, rng) {
+                if let Some((scattered, attenuation)) = hit.mat.scatter(r, &hit, rng) {
                     return attenuation * color(&scattered, world, depth + 1, rng);
                 }
             }

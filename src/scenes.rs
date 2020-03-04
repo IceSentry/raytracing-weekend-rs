@@ -4,7 +4,7 @@ use crate::{
         bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere,
         sphere::Sphere, Hittables,
     },
-    material::Material,
+    material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
     random::random_double,
     texture::{checker_texture::CheckerTexture, constant_texture::ConstantTexture, TextureType},
     vec3::Vec3,
@@ -54,31 +54,31 @@ pub fn random_scene(rng: &mut ThreadRng) -> Scene {
         Hittables::from(Sphere {
             center: Vec3::new(0., -1000., 0.),
             radius: 1000.,
-            mat: Material::Lambertian {
+            mat: MaterialType::from(Lambertian {
                 albedo: default_checker(),
-            },
+            }),
         }),
         Hittables::from(Sphere {
             center: Vec3::new(0., 1., 0.),
             radius: 1.,
-            mat: Material::Dielectric { ref_idx: 1.5 },
+            mat: MaterialType::from(Dielectric { ref_idx: 1.5 }),
         }),
         Hittables::from(Sphere {
             center: Vec3::new(-4., 1., 0.),
             radius: 1.,
-            mat: Material::Lambertian {
+            mat: MaterialType::from(Lambertian {
                 albedo: TextureType::from(ConstantTexture {
                     color: Vec3::new(0.4, 0.2, 0.1),
                 }),
-            },
+            }),
         }),
         Hittables::from(Sphere {
             center: Vec3::new(4., 1., 0.),
             radius: 1.,
-            mat: Material::Metal {
+            mat: MaterialType::from(Metal {
                 albedo: Vec3::new(0.7, 0.6, 0.5),
-                fuzziness: 0.,
-            },
+                fuzz: 0.,
+            }),
         }),
     ];
 
@@ -92,7 +92,7 @@ pub fn random_scene(rng: &mut ThreadRng) -> Scene {
 
             if (center - Vec3::new(4., 0.2, 0.)).norm() > 0.9 {
                 let material = match random_double(rng) {
-                    x if (0.0..0.8).contains(&x) => Material::Lambertian {
+                    x if (0.0..0.8).contains(&x) => MaterialType::from(Lambertian {
                         albedo: TextureType::from(ConstantTexture {
                             color: Vec3::new(
                                 random_double(rng) * random_double(rng),
@@ -100,21 +100,21 @@ pub fn random_scene(rng: &mut ThreadRng) -> Scene {
                                 random_double(rng) * random_double(rng),
                             ),
                         }),
-                    },
-                    x if (0.8..0.95).contains(&x) => Material::Metal {
+                    }),
+                    x if (0.8..0.95).contains(&x) => MaterialType::from(Metal {
                         albedo: Vec3::new(
                             0.5 * (1. + random_double(rng)),
                             0.5 * (1. + random_double(rng)),
                             0.5 * (1. + random_double(rng)),
                         ),
-                        fuzziness: 0.5 * random_double(rng),
-                    },
-                    _ => Material::Dielectric { ref_idx: 1.5 },
+                        fuzz: 0.5 * random_double(rng),
+                    }),
+                    _ => MaterialType::from(Dielectric { ref_idx: 1.5 }),
                 };
 
                 let radius = 0.2;
                 world.push(match material {
-                    Material::Lambertian { .. } => Hittables::from(MovingSphere {
+                    MaterialType::Lambertian(..) => Hittables::from(MovingSphere {
                         center0: center,
                         center1: center + Vec3::new(0., 0.5 * random_double(rng), 0.),
                         time0: 0.,
@@ -144,16 +144,16 @@ pub fn two_spheres() -> Scene {
             Hittables::from(Sphere {
                 center: Vec3::new(0., 10., 0.),
                 radius: 10.,
-                mat: Material::Lambertian {
+                mat: MaterialType::from(Lambertian {
                     albedo: default_checker(),
-                },
+                }),
             }),
             Hittables::from(Sphere {
                 center: Vec3::new(0., -10., 0.),
                 radius: 10.,
-                mat: Material::Lambertian {
+                mat: MaterialType::from(Lambertian {
                     albedo: default_checker(),
-                },
+                }),
             }),
         ],
     });

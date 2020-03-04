@@ -3,7 +3,7 @@ use crate::{
         aabb::AABB, bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere,
         sphere::Sphere,
     },
-    material::Material,
+    material::MaterialType,
     ray::Ray,
     vec3::Vec3,
 };
@@ -19,7 +19,7 @@ pub struct HitRecord {
     pub t: f32,
     pub point: Vec3,
     pub normal: Vec3,
-    pub mat: Material,
+    pub mat: MaterialType,
 }
 
 #[enum_dispatch]

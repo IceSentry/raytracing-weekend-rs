@@ -1,6 +1,6 @@
 use crate::{
     hittable::{aabb::AABB, HitRecord, Hittable},
-    material::Material,
+    material::MaterialType,
     ray::Ray,
     vec3::Vec3,
 };
@@ -9,7 +9,7 @@ use crate::{
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
-    pub mat: Material,
+    pub mat: MaterialType,
 }
 
 impl Hittable for Sphere {

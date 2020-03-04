@@ -3,10 +3,8 @@ use crate::{
         aabb::{surrounding_box, AABB},
         HitRecord, Hittable, Hittables,
     },
-    random::random_double,
     ray::Ray,
 };
-use rand::rngs::ThreadRng;
 use std::cmp::Ordering;
 
 #[derive(Clone)]
