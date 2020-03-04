@@ -6,7 +6,7 @@ use crate::{
     vec3::Vec3,
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
@@ -29,7 +29,7 @@ impl Hittable for Sphere {
                     t,
                     point,
                     normal: (point - self.center) / self.radius,
-                    mat: self.mat,
+                    mat: self.mat.clone(),
                 }
             };
 

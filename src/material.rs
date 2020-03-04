@@ -1,9 +1,15 @@
-use crate::{hittable::HitRecord, random::random_double, ray::Ray, vec3::Vec3};
+use crate::{
+    hittable::HitRecord,
+    random::random_double,
+    ray::Ray,
+    texture::{Texture, TextureType},
+    vec3::Vec3,
+};
 use rand::rngs::ThreadRng;
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub enum Material {
-    Lambertian { albedo: Vec3 },
+    Lambertian { albedo: TextureType },
     Metal { albedo: Vec3, fuzziness: f32 },
     Dielectric { ref_idx: f32 },
 }
@@ -40,10 +46,13 @@ fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
 }
 
 pub fn scatter(ray_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<(Ray, Vec3)> {
-    match rec.mat {
+    match rec.mat.clone() {
         Material::Lambertian { albedo } => {
             let target = rec.point + rec.normal + random_in_unit_sphere(rng);
-            Some((Ray::new(rec.point, target - rec.point, 0.), albedo))
+            Some((
+                Ray::new(rec.point, target - rec.point, 0.),
+                albedo.value(0., 0., rec.point),
+            ))
         }
         Material::Metal { albedo, fuzziness } => {
             let fuzz = if fuzziness < 1. { fuzziness } else { 1. };

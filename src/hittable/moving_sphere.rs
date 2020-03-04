@@ -7,7 +7,7 @@ use crate::{
     vec3::Vec3,
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct MovingSphere {
     pub center0: Vec3,
     pub center1: Vec3,
@@ -33,7 +33,7 @@ impl Hittable for MovingSphere {
                     t,
                     point,
                     normal: (point - self.center(r.time)) / self.radius,
-                    mat: self.material,
+                    mat: self.material.clone(),
                 }
             };
 

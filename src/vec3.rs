@@ -1,5 +1,7 @@
 use std::{ops, ops::{Neg, Index}};
 
+use impl_ops::*;
+
 #[derive(Debug, Copy, Clone, Default)]
 pub struct Vec3 {
     pub x: f32,

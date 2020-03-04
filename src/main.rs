@@ -1,12 +1,6 @@
-#[macro_use]
-extern crate impl_ops;
-// #[macro_use]
-// extern crate enum_dispatch;
-
 use std::time::Instant;
 
 use pixels::{wgpu::Surface, Error, Pixels, SurfaceTexture};
-use rand::rngs::ThreadRng;
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
@@ -21,120 +15,15 @@ mod material;
 mod random;
 mod ray;
 mod renderer;
+mod scenes;
+mod texture;
 mod vec3;
 
-use crate::{
-    camera::Camera,
-    hittable::{bvh_node::BvhNode, moving_sphere::MovingSphere, sphere::Sphere, Hittables},
-    material::Material,
-    random::random_double,
-    renderer::render,
-    vec3::Vec3,
-};
+use crate::{camera::Camera, hittable::Hittables, renderer::render, scenes::random_scene};
+use scenes::two_spheres;
 
 const WIDTH: u32 = 1200;
 const HEIGHT: u32 = 800;
-
-fn init_world(rng: &mut ThreadRng) -> Hittables {
-    let mut world = vec![
-        Hittables::Sphere(Sphere {
-            center: Vec3::new(0., -1000., 0.),
-            radius: 1000.,
-            mat: Material::Lambertian {
-                albedo: Vec3::new(0.5, 0.5, 0.5),
-            },
-        }),
-        Hittables::Sphere(Sphere {
-            center: Vec3::new(0., 1., 0.),
-            radius: 1.,
-            mat: Material::Dielectric { ref_idx: 1.5 },
-        }),
-        Hittables::Sphere(Sphere {
-            center: Vec3::new(-4., 1., 0.),
-            radius: 1.,
-            mat: Material::Lambertian {
-                albedo: Vec3::new(0.4, 0.2, 0.1),
-            },
-        }),
-        Hittables::Sphere(Sphere {
-            center: Vec3::new(4., 1., 0.),
-            radius: 1.,
-            mat: Material::Metal {
-                albedo: Vec3::new(0.7, 0.6, 0.5),
-                fuzziness: 0.,
-            },
-        }),
-    ];
-
-    (-11..11).for_each(|a| {
-        (-11..11).for_each(|b| {
-            let center = Vec3::new(
-                a as f32 + 0.9 * random_double(rng),
-                0.2,
-                b as f32 + 0.9 * random_double(rng),
-            );
-
-            if (center - Vec3::new(4., 0.2, 0.)).norm() > 0.9 {
-                let material = match random_double(rng) {
-                    x if (0.0..0.8).contains(&x) => Material::Lambertian {
-                        albedo: Vec3::new(
-                            random_double(rng) * random_double(rng),
-                            random_double(rng) * random_double(rng),
-                            random_double(rng) * random_double(rng),
-                        ),
-                    },
-                    x if (0.8..0.95).contains(&x) => Material::Metal {
-                        albedo: Vec3::new(
-                            0.5 * (1. + random_double(rng)),
-                            0.5 * (1. + random_double(rng)),
-                            0.5 * (1. + random_double(rng)),
-                        ),
-                        fuzziness: 0.5 * random_double(rng),
-                    },
-                    _ => Material::Dielectric { ref_idx: 1.5 },
-                };
-
-                let radius = 0.2;
-                world.push(match material {
-                    Material::Lambertian { .. } => Hittables::MovingSphere(MovingSphere {
-                        center0: center,
-                        center1: center + Vec3::new(0., 0.5 * random_double(rng), 0.),
-                        time0: 0.,
-                        time1: 1.0,
-                        radius,
-                        material,
-                    }),
-                    _ => Hittables::Sphere(Sphere {
-                        center,
-                        radius,
-                        mat: material,
-                    }),
-                });
-            }
-        });
-    });
-
-    // Hittables::List(HittableList { list: world })
-    Hittables::BvhNode(BvhNode::new(world, 0., 1., rng))
-}
-
-fn init_camera() -> Camera {
-    let lookfrom = Vec3::new(13., 2., 3.);
-    let lookat = Vec3::new(0., 0., 0.);
-    let dist_to_focus = 10.;
-    let aperture = 0.0;
-    Camera::new(
-        lookfrom,
-        lookat,
-        Vec3::new(0., 1., 0.),
-        20.,
-        WIDTH as f32 / HEIGHT as f32,
-        aperture,
-        dist_to_focus,
-        0.,
-        1.,
-    )
-}
 
 fn init_pixels(window: &winit::window::Window, scale: u32) -> Pixels {
     let surface = Surface::create(window);
@@ -164,15 +53,22 @@ fn main() -> Result<(), Error> {
     let num_samples = 10;
     let scale = 1;
 
-    let cam = init_camera();
-    let world = init_world(&mut rand::thread_rng());
+    let scene = {
+        let mut rng = rand::thread_rng();
+        random_scene(&mut rng)
+    };
 
     let event_loop = EventLoop::new();
     let window = init_window(&event_loop, scale);
     let mut pixels = init_pixels(&window, scale);
 
     let start = Instant::now();
-    render_to_frame(cam, &world, num_samples, pixels.get_frame());
+    render_to_frame(
+        scene.camera,
+        &scene.hittables,
+        num_samples,
+        pixels.get_frame(),
+    );
     let end = Instant::now();
     let time_to_render = end.duration_since(start);
 
