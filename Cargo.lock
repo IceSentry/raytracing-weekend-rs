@@ -1005,6 +1005,7 @@ version = "0.1.0"
 dependencies = [
  "enum_dispatch",
  "impl_ops",
+ "lazy_static",
  "pixels",
  "rand",
  "rayon",

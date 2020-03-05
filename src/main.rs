@@ -1,4 +1,6 @@
-use std::time::Instant;
+
+use std::io::prelude::*;
+use std::{fs::File, time::Instant};
 
 use pixels::{wgpu::Surface, Error, Pixels, SurfaceTexture};
 use structopt::StructOpt;
@@ -20,8 +22,6 @@ mod texture;
 mod vec3;
 
 use crate::{
-    camera::Camera,
-    hittable::Hittables,
     renderer::render,
     scenes::{random_scene, two_perlin_spheres, two_spheres},
 };
@@ -45,9 +45,13 @@ fn init_window(event_loop: &EventLoop<()>) -> Window {
         .unwrap()
 }
 
-fn render_to_frame(cam: Camera, world: &Hittables, ns: i32, frame: &mut [u8], max_depth: i32) {
-    let pixels = render(cam, world, ns, max_depth);
-    frame.copy_from_slice(&pixels[..]);
+fn _render_to_file(pixels: &[u8]) {
+    let mut file = File::create("out.ppm").expect("Failed to create file");
+    write!(file, "P3\n{} {}\n255\n", WIDTH, HEIGHT).expect("Failed to write to file");
+
+    for pixel in pixels.chunks(4) {
+        writeln!(file, "{} {} {}", pixel[0], pixel[1], pixel[2]).expect("Failed to write pixel");
+    }
 }
 
 #[derive(StructOpt, Debug)]
@@ -65,11 +69,11 @@ struct Opts {
 
 fn main() -> Result<(), Error> {
     let opts: Opts = Opts::from_args();
-    let num_samples = opts.num_samples;
+
     let mut rng = rand::thread_rng();
     let scene = match opts.scene_name.as_str() {
         "two_spheres" => two_spheres(),
-        "two_perlin_spheres" => two_perlin_spheres(&mut rng),
+        "two_perlin_spheres" => two_perlin_spheres(),
         "random" => random_scene(&mut rng),
         _ => random_scene(&mut rng),
     };
@@ -79,13 +83,11 @@ fn main() -> Result<(), Error> {
     let mut pixels = init_pixels(&window);
 
     let start = Instant::now();
-    render_to_frame(
-        scene.camera,
-        &scene.hittables,
-        num_samples,
-        pixels.get_frame(),
-        opts.depth,
-    );
+
+    let rendered_pixels = render(scene.camera, &scene.hittables, opts.num_samples, opts.depth);
+    // render_to_file(&rendered_pixels);
+    pixels.get_frame().copy_from_slice(&rendered_pixels[..]);
+
     let end = Instant::now();
     let time_to_render = end.duration_since(start);
 

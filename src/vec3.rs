@@ -27,6 +27,7 @@ impl Vec3 {
     }
 
     /// length()
+    #[inline]
     pub fn norm(&self) -> f32 {
         self.squared_norm().sqrt()
     }
@@ -39,6 +40,7 @@ impl Vec3 {
         self.z *= k;
     }
 
+    #[inline]
     pub fn dot(&self, v: Vec3) -> f32 {
         self.x * v.x + self.y * v.y + self.z * v.z
     }
@@ -51,8 +53,23 @@ impl Vec3 {
         }
     }
 
+    #[inline]
     pub fn unit(&self) -> Vec3 {
         *self / self.norm()
+    }
+
+    /// Applies `f` to each element of the vector in turn, giving a new vector.
+    #[inline]
+    pub fn map(self, mut f: impl FnMut(f32) -> f32) -> Self {
+        Vec3::new(f(self.x), f(self.y), f(self.z))
+    }
+}
+
+/// Broadcasts a single value to all vector lanes.
+impl From<f32> for Vec3 {
+    #[inline]
+    fn from(v: f32) -> Self {
+        Vec3::new(v, v, v)
     }
 }
 

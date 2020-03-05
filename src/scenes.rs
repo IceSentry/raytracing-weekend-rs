@@ -167,10 +167,10 @@ pub fn two_spheres() -> Scene {
     }
 }
 
-pub fn two_perlin_spheres(rng: &mut ThreadRng) -> Scene {
+pub fn two_perlin_spheres() -> Scene {
     let noise_texture = TextureType::from(NoiseTexture {
-        noise: Perlin::new(rng),
-        scale: 2.,
+        perlin: Perlin,
+        scale: 4.,
     });
 
     let hittables = Hittables::from(HittableList {

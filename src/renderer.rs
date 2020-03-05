@@ -29,7 +29,7 @@ fn color_iterative(
     let mut rr = *r;
 
     while local_depth < max_depth {
-        match world.hit(&rr, 0.0001, f32::MAX) {
+        match world.hit(&rr, 0.001, f32::MAX) {
             Some(hit) => {
                 if let Some((scattered, attenuation)) = hit.mat.scatter(&rr, &hit, rng) {
                     rr = scattered;
@@ -44,7 +44,7 @@ fn color_iterative(
 }
 
 fn _color(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut ThreadRng) -> Vec3 {
-    match world.hit(r, 0.0001, f32::MAX) {
+    match world.hit(r, 0.001, f32::MAX) {
         Some(hit) => {
             if depth < max_depth {
                 if let Some((scattered, attenuation)) = hit.mat.scatter(r, &hit, rng) {

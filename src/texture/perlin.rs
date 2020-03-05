@@ -1,58 +1,53 @@
 use crate::{random::random_double, vec3::Vec3};
-use rand::{rngs::ThreadRng, Rng};
+use lazy_static::lazy_static;
+use rand::{rngs::ThreadRng, thread_rng, Rng};
 
 #[derive(Clone)]
-pub struct Perlin {
-    ranvec: Vec<Vec3>,
-    perm_x: Vec<usize>,
-    perm_y: Vec<usize>,
-    perm_z: Vec<usize>,
+pub struct Perlin;
+
+lazy_static! {
+    pub static ref VECS: Vec<Vec3> = perlin_generate(&mut thread_rng());
+    pub static ref PERM_X: Vec<u8> = perlin_generate_perm(&mut thread_rng());
+    pub static ref PERM_Y: Vec<u8> = perlin_generate_perm(&mut thread_rng());
+    pub static ref PERM_Z: Vec<u8> = perlin_generate_perm(&mut thread_rng());
 }
 
 impl Perlin {
-    pub fn new(rng: &mut ThreadRng) -> Self {
-        Perlin {
-            ranvec: perlin_generate(rng),
-            perm_x: perlin_generate_perm(rng),
-            perm_y: perlin_generate_perm(rng),
-            perm_z: perlin_generate_perm(rng),
-        }
-    }
-
     pub fn noise(&self, p: Vec3) -> f32 {
-        let mut u = p.x - p.x.floor();
-        let mut v = p.y - p.z.floor();
-        let mut w = p.z - p.z.floor();
-
-        u = u * u * (3. - 2. * u);
-        v = v * v * (3. - 2. * v);
-        w = w * w * (3. - 2. * w);
-
-        let i = p.x.floor() as usize;
-        let j = p.y.floor() as usize;
-        let k = p.z.floor() as usize;
-
-        let mut c = [[[Vec3::zero(); 2]; 2]; 2];
-
+        let ijk = p.map(f32::floor);
+        let uvw = p - ijk;
+        let mut corners = [[[Vec3::default(); 2]; 2]; 2];
         for di in 0..2 {
             for dj in 0..2 {
                 for dk in 0..2 {
-                    let index = (self.perm_x[(i + di) & 255]
-                        ^ self.perm_y[(j + dj) & 255]
-                        ^ self.perm_z[(k + dk) & 255]) as usize;
-
-                    c[di][dj][dk] = self.ranvec[index];
+                    let ix = PERM_X[((ijk.x as i32 + di as i32) & 255) as usize];
+                    let iy = PERM_Y[((ijk.y as i32 + dj as i32) & 255) as usize];
+                    let iz = PERM_Z[((ijk.z as i32 + dk as i32) & 255) as usize];
+                    corners[di][dj][dk] = VECS[(ix ^ iy ^ iz) as usize]
                 }
             }
         }
 
-        trilinear_interpolate(&c, u, v, w)
+        trilinear_interpolate(&corners, uvw)
+    }
+
+    pub fn turbulence(&self, p: Vec3, depth: i32) -> f32 {
+        let mut accum = 0.0;
+        let mut temp_p = p;
+        let mut weight = 1.;
+
+        for _ in 0..depth {
+            accum += weight * self.noise(temp_p);
+            weight *= 5.;
+            temp_p *= 2.;
+        }
+        accum.abs()
     }
 }
 
 fn perlin_generate(rng: &mut ThreadRng) -> Vec<Vec3> {
     let mut result = Vec::with_capacity(256);
-    for _ in 0..256 {
+    for _ in 0..=255 {
         result.push(
             Vec3::new(
                 2. * random_double(rng) - 1.,
@@ -65,36 +60,33 @@ fn perlin_generate(rng: &mut ThreadRng) -> Vec<Vec3> {
     result
 }
 
-fn permute(p: &mut Vec<usize>, rng: &mut ThreadRng) {
-    for i in (0..p.len()).rev() {
-        let target = rng.gen_range(0, i + 1);
+fn permute(p: &mut Vec<u8>, rng: &mut ThreadRng) {
+    for i in (1..256).rev() {
+        let target = rng.gen_range(0, i);
         p.swap(i, target);
     }
 }
 
-fn perlin_generate_perm(rng: &mut ThreadRng) -> Vec<usize> {
+fn perlin_generate_perm(rng: &mut ThreadRng) -> Vec<u8> {
     let mut p = Vec::with_capacity(256);
     for i in 0..256 {
-        p.push(i);
+        p.push(i as u8);
     }
     permute(&mut p, rng);
     p
 }
 
-fn trilinear_interpolate(c: &[[[Vec3; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
-    let uu = u * u * (3. - 2. * u);
-    let vv = v * v * (3. - 2. * v);
-    let ww = w * w * (3. - 2. * w);
+fn trilinear_interpolate(corners: &[[[Vec3; 2]; 2]; 2], uvw: Vec3) -> f32 {
+    let uvw2 = uvw.map(|x| x * x * (3. - 2. * x));
 
     let mut accum = 0.;
     for i in 0..2 {
         for j in 0..2 {
             for k in 0..2 {
-                let weight = Vec3::new(u - i as f32, v - j as f32, w - k as f32);
-                accum += (i as f32 * uu + (1 - i) as f32 * (1. - uu))
-                    * (j as f32 * vv + (1 - j) as f32 * (1. - vv))
-                    * (k as f32 * ww + (1 - k) as f32 * (1. - ww))
-                    * c[i][j][k].dot(weight);
+                let ijk = Vec3::new(i as f32, j as f32, k as f32);
+                let weight = uvw - ijk;
+                let acc_temp = ijk * uvw2 + (Vec3::from(1.) - ijk) * (Vec3::from(1.) - uvw);
+                accum += acc_temp.x * acc_temp.y * acc_temp.z * corners[i][j][k].dot(weight);
             }
         }
     }
