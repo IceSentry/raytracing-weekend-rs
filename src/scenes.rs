@@ -13,7 +13,7 @@ use crate::{
     vec3::Vec3,
     HEIGHT, WIDTH,
 };
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 pub struct Scene {
     pub camera: Camera,
@@ -52,7 +52,7 @@ fn default_checker() -> TextureType {
     })
 }
 
-pub fn random_scene(rng: &mut ThreadRng) -> Scene {
+pub fn random_scene(rng: &mut impl Rng) -> Scene {
     let mut world = vec![
         Hittables::from(Sphere {
             center: Vec3::new(0., -1000., 0.),

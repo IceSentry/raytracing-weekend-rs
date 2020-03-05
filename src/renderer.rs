@@ -1,6 +1,7 @@
 use std::f32;
 
-use rand::rngs::ThreadRng;
+use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 use rayon::prelude::*;
 
 use crate::{
@@ -18,7 +19,7 @@ fn color_iterative(
     world: &dyn Hittable,
     depth: i32,
     max_depth: i32,
-    rng: &mut ThreadRng,
+    rng: &mut impl Rng,
 ) -> Vec3 {
     let mut local_depth = depth;
     let mut col = {
@@ -43,7 +44,7 @@ fn color_iterative(
     col
 }
 
-fn _color(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut ThreadRng) -> Vec3 {
+fn _color(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
     match world.hit(r, 0.001, f32::MAX) {
         Some(hit) => {
             if depth < max_depth {
@@ -64,7 +65,7 @@ fn _color(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut Thre
 pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) -> Vec<u8> {
     (0..WIDTH * HEIGHT)
         .into_par_iter()
-        .map_init(rand::thread_rng, |rng, screen_pos| {
+        .map_init(SmallRng::from_entropy, |rng, screen_pos| {
             let i = screen_pos % WIDTH;
             let j = HEIGHT - 1 - screen_pos / WIDTH; // reverse the height index
 

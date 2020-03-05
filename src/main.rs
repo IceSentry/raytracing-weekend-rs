@@ -1,8 +1,9 @@
-
 use std::io::prelude::*;
 use std::{fs::File, time::Instant};
 
 use pixels::{wgpu::Surface, Error, Pixels, SurfaceTexture};
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 use structopt::StructOpt;
 use winit::{
     dpi::LogicalSize,
@@ -70,12 +71,15 @@ struct Opts {
 fn main() -> Result<(), Error> {
     let opts: Opts = Opts::from_args();
 
-    let mut rng = rand::thread_rng();
+    // let mut rng = rand::thread_rng();
+
+    let rng = &mut SmallRng::from_entropy();
+
     let scene = match opts.scene_name.as_str() {
         "two_spheres" => two_spheres(),
         "two_perlin_spheres" => two_perlin_spheres(),
-        "random" => random_scene(&mut rng),
-        _ => random_scene(&mut rng),
+        "random" => random_scene(rng),
+        _ => random_scene(rng),
     };
 
     let event_loop = EventLoop::new();

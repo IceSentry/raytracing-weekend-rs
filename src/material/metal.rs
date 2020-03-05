@@ -1,4 +1,4 @@
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use crate::{
     hittable::HitRecord,
@@ -14,7 +14,7 @@ pub struct Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<(Ray, Vec3)> {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
         let fuzz = if self.fuzz < 1. { self.fuzz } else { 1. };
 
         let reflected = reflect(ray_in.direction.unit(), rec.normal);

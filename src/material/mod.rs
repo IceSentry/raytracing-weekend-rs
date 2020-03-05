@@ -1,5 +1,5 @@
 use enum_dispatch::enum_dispatch;
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use crate::{
     hittable::HitRecord,
@@ -15,7 +15,7 @@ pub mod metal;
 
 #[enum_dispatch]
 pub trait Material: Clone {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<(Ray, Vec3)>;
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)>;
 }
 
 #[enum_dispatch(Material)]
@@ -47,7 +47,7 @@ fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2. * v.dot(n) * n
 }
 
-fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
+fn random_in_unit_sphere(rng: &mut impl Rng) -> Vec3 {
     loop {
         let p = 2.0 * Vec3::new(random_double(rng), random_double(rng), random_double(rng))
             - Vec3::new(1., 1., 1.);
