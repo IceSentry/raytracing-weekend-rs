@@ -13,9 +13,13 @@ use crate::{
     HEIGHT, WIDTH,
 };
 
-const MAX_DEPTH: i32 = 16;
-
-fn _color_iterative(r: &Ray, world: &dyn Hittable, depth: i32, rng: &mut ThreadRng) -> Vec3 {
+fn color_iterative(
+    r: &Ray,
+    world: &dyn Hittable,
+    depth: i32,
+    max_depth: i32,
+    rng: &mut ThreadRng,
+) -> Vec3 {
     let mut local_depth = depth;
     let mut col = {
         let unit_direction = r.direction.unit();
@@ -24,7 +28,7 @@ fn _color_iterative(r: &Ray, world: &dyn Hittable, depth: i32, rng: &mut ThreadR
     };
     let mut rr = *r;
 
-    while local_depth < MAX_DEPTH {
+    while local_depth < max_depth {
         match world.hit(&rr, 0.0001, f32::MAX) {
             Some(hit) => {
                 if let Some((scattered, attenuation)) = hit.mat.scatter(&rr, &hit, rng) {
@@ -39,12 +43,12 @@ fn _color_iterative(r: &Ray, world: &dyn Hittable, depth: i32, rng: &mut ThreadR
     col
 }
 
-fn color(r: &Ray, world: &Hittables, depth: i32, rng: &mut ThreadRng) -> Vec3 {
+fn _color(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut ThreadRng) -> Vec3 {
     match world.hit(r, 0.0001, f32::MAX) {
         Some(hit) => {
-            if depth < MAX_DEPTH {
+            if depth < max_depth {
                 if let Some((scattered, attenuation)) = hit.mat.scatter(r, &hit, rng) {
-                    return attenuation * color(&scattered, world, depth + 1, rng);
+                    return attenuation * _color(&scattered, world, depth + 1, max_depth, rng);
                 }
             }
             Vec3::zero()
@@ -57,7 +61,7 @@ fn color(r: &Ray, world: &Hittables, depth: i32, rng: &mut ThreadRng) -> Vec3 {
     }
 }
 
-pub fn render(cam: Camera, world: &Hittables, num_samples: i32) -> Vec<u8> {
+pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) -> Vec<u8> {
     (0..WIDTH * HEIGHT)
         .into_par_iter()
         .map_init(rand::thread_rng, |rng, screen_pos| {
@@ -69,7 +73,7 @@ pub fn render(cam: Camera, world: &Hittables, num_samples: i32) -> Vec<u8> {
                 let u = (i as f32 + random_double(rng)) / WIDTH as f32;
                 let v = (j as f32 + random_double(rng)) / HEIGHT as f32;
                 let ray = cam.get_ray(u, v, rng);
-                col += color(&ray, world, 0, rng);
+                col += color_iterative(&ray, world, 0, max_depth, rng);
             }
             col /= num_samples as f32;
             col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());

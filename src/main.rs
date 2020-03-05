@@ -19,8 +19,12 @@ mod scenes;
 mod texture;
 mod vec3;
 
-use crate::{camera::Camera, hittable::Hittables, renderer::render, scenes::random_scene};
-use scenes::two_spheres;
+use crate::{
+    camera::Camera,
+    hittable::Hittables,
+    renderer::render,
+    scenes::{random_scene, two_spheres},
+};
 
 const WIDTH: u32 = 1200;
 const HEIGHT: u32 = 800;
@@ -41,8 +45,8 @@ fn init_window(event_loop: &EventLoop<()>) -> Window {
         .unwrap()
 }
 
-fn render_to_frame(cam: Camera, world: &Hittables, ns: i32, frame: &mut [u8]) {
-    let pixels = render(cam, world, ns);
+fn render_to_frame(cam: Camera, world: &Hittables, ns: i32, frame: &mut [u8], max_depth: i32) {
+    let pixels = render(cam, world, ns, max_depth);
     frame.copy_from_slice(&pixels[..]);
 }
 
@@ -50,8 +54,10 @@ fn render_to_frame(cam: Camera, world: &Hittables, ns: i32, frame: &mut [u8]) {
 #[structopt(version = "1.0", author = "IceSentry")]
 struct Opts {
     /// Number of samples
-    #[structopt(short, long, default_value = "10")]
+    #[structopt(short, long, default_value = "8")]
     num_samples: i32,
+    #[structopt(short, long, default_value = "16")]
+    depth: i32,
     /// Name of the scene to render
     #[structopt(short, long, default_value = "random_scene")]
     scene_name: String,
@@ -60,12 +66,11 @@ struct Opts {
 fn main() -> Result<(), Error> {
     let opts: Opts = Opts::from_args();
     let num_samples = opts.num_samples;
+    let mut rng = rand::thread_rng();
     let scene = match opts.scene_name.as_str() {
         "two_spheres" => two_spheres(),
-        _ => {
-            let mut rng = rand::thread_rng();
-            random_scene(&mut rng)
-        }
+        "random" => random_scene(&mut rng),
+        _ => random_scene(&mut rng),
     };
 
     let event_loop = EventLoop::new();
@@ -78,6 +83,7 @@ fn main() -> Result<(), Error> {
         &scene.hittables,
         num_samples,
         pixels.get_frame(),
+        opts.depth,
     );
     let end = Instant::now();
     let time_to_render = end.duration_since(start);
