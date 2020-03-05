@@ -14,34 +14,28 @@ use crate::{
     HEIGHT, WIDTH,
 };
 
-fn color_iterative(
-    r: &Ray,
-    world: &dyn Hittable,
-    depth: i32,
-    max_depth: i32,
-    rng: &mut impl Rng,
-) -> Vec3 {
-    let mut local_depth = depth;
-    let mut col = {
-        let unit_direction = r.direction.unit();
-        let t = 0.5 * (unit_direction.y + 1.0);
-        (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0)
+fn color(mut ray: Ray, world: &Hittables, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
+    let mut acc = {
+        let t = 0.5 * (ray.direction.unit().y + 1.0);
+        (1. - t) * Vec3::one() + t * Vec3::new(0.5, 0.7, 1.)
     };
-    let mut rr = *r;
+    let mut bounces = 0;
 
-    while local_depth < max_depth {
-        match world.hit(&rr, 0.001, f32::MAX) {
-            Some(hit) => {
-                if let Some((scattered, attenuation)) = hit.mat.scatter(&rr, &hit, rng) {
-                    rr = scattered;
-                    col = attenuation * col;
-                }
+    while let Some(hit) = world.hit(&ray, 0.001, f32::MAX) {
+        match hit.mat.scatter(&ray, &hit, rng) {
+            Some((scattered, attenuation)) => {
+                ray = scattered;
+                acc = attenuation * acc;
             }
-            None => break,
+            None => return acc,
         }
-        local_depth += 1;
+
+        bounces += 1;
+        if bounces >= max_depth {
+            break;
+        }
     }
-    col
+    acc
 }
 
 fn _color(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
@@ -74,7 +68,7 @@ pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) 
                 let u = (i as f32 + random_double(rng)) / WIDTH as f32;
                 let v = (j as f32 + random_double(rng)) / HEIGHT as f32;
                 let ray = cam.get_ray(u, v, rng);
-                col += color_iterative(&ray, world, 0, max_depth, rng);
+                col += color(ray, world, max_depth, rng);
             }
             col /= num_samples as f32;
             col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
