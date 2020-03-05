@@ -6,7 +6,10 @@ use crate::{
     },
     material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
     random::random_double,
-    texture::{checker_texture::CheckerTexture, constant_texture::ConstantTexture, TextureType},
+    texture::{
+        checker_texture::CheckerTexture, constant_texture::ConstantTexture,
+        noise_texture::NoiseTexture, perlin::Perlin, TextureType,
+    },
     vec3::Vec3,
     HEIGHT, WIDTH,
 };
@@ -153,6 +156,37 @@ pub fn two_spheres() -> Scene {
                 radius: 10.,
                 mat: MaterialType::from(Lambertian {
                     albedo: default_checker(),
+                }),
+            }),
+        ],
+    });
+
+    Scene {
+        camera: default_camera(),
+        hittables,
+    }
+}
+
+pub fn two_perlin_spheres(rng: &mut ThreadRng) -> Scene {
+    let noise_texture = TextureType::from(NoiseTexture {
+        noise: Perlin::new(rng),
+        scale: 2.,
+    });
+
+    let hittables = Hittables::from(HittableList {
+        list: vec![
+            Hittables::from(Sphere {
+                center: Vec3::new(0., -1000., 0.),
+                radius: 1000.,
+                mat: MaterialType::from(Lambertian {
+                    albedo: noise_texture.clone(),
+                }),
+            }),
+            Hittables::from(Sphere {
+                center: Vec3::new(0., 2., 0.),
+                radius: 2.,
+                mat: MaterialType::from(Lambertian {
+                    albedo: noise_texture,
                 }),
             }),
         ],

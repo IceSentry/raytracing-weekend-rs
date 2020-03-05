@@ -23,7 +23,7 @@ use crate::{
     camera::Camera,
     hittable::Hittables,
     renderer::render,
-    scenes::{random_scene, two_spheres},
+    scenes::{random_scene, two_perlin_spheres, two_spheres},
 };
 
 const WIDTH: u32 = 1200;
@@ -69,6 +69,7 @@ fn main() -> Result<(), Error> {
     let mut rng = rand::thread_rng();
     let scene = match opts.scene_name.as_str() {
         "two_spheres" => two_spheres(),
+        "two_perlin_spheres" => two_perlin_spheres(&mut rng),
         "random" => random_scene(&mut rng),
         _ => random_scene(&mut rng),
     };
