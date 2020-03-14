@@ -11,8 +11,9 @@ pub struct NoiseTexture {
 
 impl Texture for NoiseTexture {
     fn value(&self, _u: f32, _v: f32, p: Vec3) -> Vec3 {
-        Vec3::one() * 0.5 * (1. + self.scale * p.z + 10. * self.perlin.turbulence(p, 7)).sin()
+        Vec3::one() * 0.5 * (1. + (self.scale * p.z + 10. * self.perlin.turbulence(p, 7)).sin())
         // Vec3::one() * self.perlin.noise(self.scale * p)
-        // Vec3::one() * self.perlin.turbulence(p, 7)
+        // Vec3::one() * self.perlin.turbulence(self.scale * p, 7)
+        // Vec3::one() * self.perlin.noise(p)
     }
 }

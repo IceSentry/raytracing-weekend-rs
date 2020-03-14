@@ -170,7 +170,7 @@ pub fn two_spheres() -> Scene {
 pub fn two_perlin_spheres() -> Scene {
     let noise_texture = TextureType::from(NoiseTexture {
         perlin: Perlin,
-        scale: 4.,
+        scale: 7.,
     });
 
     let hittables = Hittables::from(HittableList {
