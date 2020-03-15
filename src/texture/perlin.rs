@@ -1,15 +1,15 @@
 use crate::{random::random_double, vec3::Vec3};
 use lazy_static::lazy_static;
-use rand::{rngs::ThreadRng, thread_rng, Rng};
+use rand::{rngs::SmallRng, Rng, SeedableRng};
 
 #[derive(Clone)]
 pub struct Perlin;
 
 lazy_static! {
-    pub static ref VECS: Vec<Vec3> = perlin_generate(&mut thread_rng());
-    pub static ref PERM_X: Vec<u8> = perlin_generate_perm(&mut thread_rng());
-    pub static ref PERM_Y: Vec<u8> = perlin_generate_perm(&mut thread_rng());
-    pub static ref PERM_Z: Vec<u8> = perlin_generate_perm(&mut thread_rng());
+    pub static ref VECS: Vec<Vec3> = perlin_generate();
+    pub static ref PERM_X: Vec<u8> = perlin_generate_perm();
+    pub static ref PERM_Y: Vec<u8> = perlin_generate_perm();
+    pub static ref PERM_Z: Vec<u8> = perlin_generate_perm();
 }
 
 impl Perlin {
@@ -45,9 +45,10 @@ impl Perlin {
     }
 }
 
-fn perlin_generate(rng: &mut ThreadRng) -> Vec<Vec3> {
+fn perlin_generate() -> Vec<Vec3> {
+    let rng = &mut SmallRng::from_entropy();
     let mut result = Vec::with_capacity(256);
-    for _ in 0..=255 {
+    for _ in 0..256 {
         result.push(
             Vec3::new(
                 2. * random_double(rng) - 1.,
@@ -60,14 +61,15 @@ fn perlin_generate(rng: &mut ThreadRng) -> Vec<Vec3> {
     result
 }
 
-fn permute(p: &mut Vec<u8>, rng: &mut ThreadRng) {
+fn permute(p: &mut Vec<u8>, rng: &mut impl Rng) {
     for i in (1..256).rev() {
         let target = rng.gen_range(0, i);
         p.swap(i, target);
     }
 }
 
-fn perlin_generate_perm(rng: &mut ThreadRng) -> Vec<u8> {
+fn perlin_generate_perm() -> Vec<u8> {
+    let rng = &mut SmallRng::from_entropy();
     let mut p = Vec::with_capacity(256);
     for i in 0..256 {
         p.push(i as u8);
