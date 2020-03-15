@@ -2,8 +2,7 @@ use std::io::prelude::*;
 use std::{fs::File, time::Instant};
 
 use pixels::{wgpu::Surface, Error, Pixels, SurfaceTexture};
-use rand::rngs::SmallRng;
-use rand::SeedableRng;
+use rand::{rngs::SmallRng, SeedableRng};
 use structopt::StructOpt;
 use winit::{
     dpi::LogicalSize,
@@ -20,15 +19,13 @@ mod ray;
 mod renderer;
 mod scenes;
 mod texture;
+mod utils;
 mod vec3;
 
-use crate::{
-    renderer::render,
-    scenes::{random_scene, two_perlin_spheres, two_spheres},
-};
+use crate::{renderer::render, scenes::get_scene_from_name};
 
-const WIDTH: u32 = 1200;
-const HEIGHT: u32 = 800;
+const WIDTH: u32 = 1280;
+const HEIGHT: u32 = 720;
 
 fn init_pixels(window: &Window) -> Pixels {
     let surface = Surface::create(window);
@@ -46,7 +43,8 @@ fn init_window(event_loop: &EventLoop<()>) -> Window {
         .unwrap()
 }
 
-fn _render_to_file(pixels: &[u8]) {
+#[allow(dead_code)]
+fn render_to_file(pixels: &[u8]) {
     let mut file = File::create("out.ppm").expect("Failed to create file");
     write!(file, "P3\n{} {}\n255\n", WIDTH, HEIGHT).expect("Failed to write to file");
 
@@ -71,16 +69,9 @@ struct Opts {
 fn main() -> Result<(), Error> {
     let opts: Opts = Opts::from_args();
 
-    // let mut rng = rand::thread_rng();
-
     let rng = &mut SmallRng::from_entropy();
 
-    let scene = match opts.scene_name.as_str() {
-        "two_spheres" => two_spheres(),
-        "two_perlin_spheres" => two_perlin_spheres(),
-        "random" => random_scene(rng),
-        _ => random_scene(rng),
-    };
+    let scene = get_scene_from_name(opts.scene_name.as_str(), rng);
 
     let event_loop = EventLoop::new();
     let window = init_window(&event_loop);

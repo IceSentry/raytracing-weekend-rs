@@ -8,7 +8,7 @@ use crate::{
     random::random_double,
     texture::{
         checker_texture::CheckerTexture, constant_texture::ConstantTexture,
-        noise_texture::NoiseTexture, perlin::Perlin, TextureType,
+        image_texture::ImageTexture, noise_texture::NoiseTexture, perlin::Perlin, TextureType,
     },
     vec3::Vec3,
     HEIGHT, WIDTH,
@@ -18,6 +18,20 @@ use rand::Rng;
 pub struct Scene {
     pub camera: Camera,
     pub hittables: Hittables,
+}
+
+pub fn get_scene_from_name(name: &str, rng: &mut impl Rng) -> Scene {
+    let scene = match name {
+        "two_spheres" => two_spheres(),
+        "two_perlin_spheres" => two_perlin_spheres(),
+        "random" => random_scene(rng),
+        "earth" => earth(),
+        _ => random_scene(rng),
+    };
+
+    println!("{} scene generated", name);
+
+    scene
 }
 
 fn default_camera() -> Camera {
@@ -195,5 +209,30 @@ pub fn two_perlin_spheres() -> Scene {
     Scene {
         camera: default_camera(),
         hittables,
+    }
+}
+
+pub fn earth() -> Scene {
+    // To test this, use -n 1 -d 1
+    let image = image::open("assets/textures/earthmap.jpg")
+        .expect("earthmap.jpg not found")
+        .to_rgb();
+    let (nx, ny) = image.dimensions();
+
+    let earth = Hittables::from(Sphere {
+        center: Vec3::new(0., 0., 0.),
+        radius: 2.,
+        mat: MaterialType::from(Lambertian {
+            albedo: TextureType::from(ImageTexture {
+                data: image.into_raw(),
+                nx,
+                ny,
+            }),
+        }),
+    });
+
+    Scene {
+        camera: default_camera(),
+        hittables: earth,
     }
 }
