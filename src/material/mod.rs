@@ -3,19 +3,22 @@ use rand::Rng;
 
 use crate::{
     hittable::HitRecord,
-    material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal},
     random::random_double,
     ray::Ray,
+    texture::{Texture, TextureType},
     vec3::Vec3,
 };
+use utils::{random_in_unit_sphere, reflect, refract, schlick};
 
-pub mod dielectric;
-pub mod lambertian;
-pub mod metal;
+mod utils;
 
 #[enum_dispatch]
 pub trait Material: Clone {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)>;
+
+    fn emitted(&self) -> Vec3 {
+        Vec3::zero()
+    }
 }
 
 #[enum_dispatch(Material)]
@@ -26,33 +29,80 @@ pub enum MaterialType {
     Dielectric,
 }
 
-fn schlick(cosine: f32, ref_idx: f32) -> f32 {
-    let r0 = ((1. - ref_idx) / (1. + ref_idx)).powf(2.);
-    r0 + (1. - r0) * (1. - cosine).powf(5.)
+#[derive(Clone)]
+pub struct Lambertian {
+    pub albedo: TextureType,
 }
 
-fn refract(v: Vec3, n: Vec3, ni_over_nt: f32) -> Option<Vec3> {
-    let uv = v.unit();
-    let dt = uv.dot(n);
-    let discriminant = 1. - ni_over_nt * ni_over_nt * (1. - dt * dt);
-    if discriminant > 0. {
-        let refracted = ni_over_nt * (uv - n * dt) - n * discriminant.sqrt();
-        Some(refracted)
-    } else {
-        None
+impl Material for Lambertian {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+        let target = rec.point + rec.normal + random_in_unit_sphere(rng);
+        Some((
+            Ray::new(rec.point, target - rec.point, ray_in.time),
+            self.albedo.value(rec.u, rec.v, rec.point),
+        ))
     }
 }
 
-fn reflect(v: Vec3, n: Vec3) -> Vec3 {
-    v - 2. * v.dot(n) * n
+#[derive(Clone)]
+pub struct Metal {
+    pub albedo: Vec3,
+    pub fuzz: f32,
 }
 
-fn random_in_unit_sphere(rng: &mut impl Rng) -> Vec3 {
-    loop {
-        let p = 2.0 * Vec3::new(random_double(rng), random_double(rng), random_double(rng))
-            - Vec3::new(1., 1., 1.);
-        if p.squared_norm() < 1. {
-            return p;
+impl Material for Metal {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+        let fuzz = if self.fuzz < 1. { self.fuzz } else { 1. };
+
+        let reflected = reflect(ray_in.direction.unit(), rec.normal);
+        let scattered = Ray::new(
+            rec.point,
+            reflected + fuzz * random_in_unit_sphere(rng),
+            ray_in.time,
+        );
+
+        if scattered.direction.dot(rec.normal) > 0. {
+            Some((scattered, self.albedo))
+        } else {
+            None
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct Dielectric {
+    pub ref_idx: f32,
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+        let outward_normal: Vec3;
+        let reflected = reflect(ray_in.direction, rec.normal);
+        let ni_over_nt: f32;
+        let attenuation = Vec3::new(1., 1., 1.);
+        let cosine: f32;
+
+        if ray_in.direction.dot(rec.normal) > 0. {
+            outward_normal = -rec.normal;
+            ni_over_nt = self.ref_idx;
+            cosine = self.ref_idx * ray_in.direction.dot(rec.normal) / ray_in.direction.norm()
+        } else {
+            outward_normal = rec.normal;
+            ni_over_nt = 1. / self.ref_idx;
+            cosine = -ray_in.direction.dot(rec.normal) / ray_in.direction.norm()
+        }
+
+        let scattered = match refract(ray_in.direction, outward_normal, ni_over_nt) {
+            Some(refracted) => {
+                if random_double(rng) > schlick(cosine, self.ref_idx) {
+                    refracted
+                } else {
+                    reflected
+                }
+            }
+            None => reflected,
+        };
+
+        Some((Ray::new(rec.point, scattered, 0.), attenuation))
     }
 }

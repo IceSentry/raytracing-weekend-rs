@@ -4,7 +4,7 @@ use crate::{
         bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere,
         sphere::Sphere, Hittables,
     },
-    material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialType},
+    material::{Dielectric, Lambertian, MaterialType, Metal},
     random::random_double,
     texture::{
         checker_texture::CheckerTexture, constant_texture::ConstantTexture,
