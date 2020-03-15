@@ -15,11 +15,13 @@ pub mod hittable_list;
 pub mod moving_sphere;
 pub mod sphere;
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub t: f32,
+    pub u: f32,
+    pub v: f32,
     pub point: Vec3,
     pub normal: Vec3,
-    pub mat: MaterialType,
+    pub mat: &'a MaterialType,
 }
 
 #[enum_dispatch]

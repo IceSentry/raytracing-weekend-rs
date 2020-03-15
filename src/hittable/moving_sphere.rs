@@ -34,7 +34,7 @@ impl Hittable for MovingSphere {
                     t,
                     point,
                     normal: (point - self.center(r.time)) / self.radius,
-                    mat: self.material.clone(),
+                    mat: &self.material,
                 }
             };
 
