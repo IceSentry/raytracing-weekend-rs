@@ -3,7 +3,7 @@ use enum_dispatch::enum_dispatch;
 use crate::{
     hittable::{
         aabb::AABB, bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere,
-        sphere::Sphere,
+        sphere::Sphere, xy_rect::XYRect,
     },
     material::MaterialType,
     ray::Ray,
@@ -15,6 +15,7 @@ pub mod bvh_node;
 pub mod hittable_list;
 pub mod moving_sphere;
 pub mod sphere;
+pub mod xy_rect;
 
 pub struct HitRecord<'a> {
     pub t: f32,
@@ -51,6 +52,7 @@ pub enum Hittables {
     MovingSphere,
     HittableList,
     BvhNode,
+    XYRect,
 }
 
 pub fn get_sphere_uv(p: Vec3) -> (f32, f32) {
