@@ -1,6 +1,7 @@
-use crate::{random::random_double, ray::Ray, vec3::Vec3, HEIGHT, WIDTH};
+use crate::{ray::Ray, vec3::Vec3, HEIGHT, WIDTH};
 use derive_builder::*;
 use rand::Rng;
+use std::ops::Range;
 
 fn random_in_unit_disk(rng: &mut impl Rng) -> Vec3 {
     loop {
@@ -22,8 +23,7 @@ pub struct Camera {
     pub v: Vec3,
     pub w: Vec3,
     pub lens_radius: f32,
-    pub time0: f32,
-    pub time1: f32,
+    pub exposure: Range<f32>,
 }
 
 #[derive(Default, Builder)]
@@ -38,10 +38,17 @@ pub struct CameraConfig {
     pub aspect: f32,
     #[builder(default = "0.0")]
     pub aperture: f32,
-    #[builder(default = "0.0")]
-    pub time0: f32,
-    #[builder(default = "1.0")]
-    pub time1: f32,
+    #[builder(default = "Exposure(0.0..1.0)")]
+    pub exposure: Exposure,
+}
+
+#[derive(Clone)]
+pub struct Exposure(Range<f32>);
+
+impl Default for Exposure {
+    fn default() -> Self {
+        Self(0.0..1.0)
+    }
 }
 
 impl CameraConfigBuilder {
@@ -74,8 +81,7 @@ impl Camera {
             v,
             w,
             lens_radius: config.aperture / 2.,
-            time0: config.time0,
-            time1: config.time1,
+            exposure: config.exposure.0,
         }
     }
 
@@ -85,7 +91,7 @@ impl Camera {
         let origin = self.origin + offset;
         let direction =
             self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin - offset;
-        let time = self.time0 + random_double(rng) * (self.time1 - self.time0);
+        let time = rng.gen_range(self.exposure.start, self.exposure.end);
 
         Ray::new(origin, direction, time)
     }
