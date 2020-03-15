@@ -16,7 +16,7 @@ mod utils;
 pub trait Material: Clone {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)>;
 
-    fn emitted(&self) -> Vec3 {
+    fn emitted(&self, _u: f32, _v: f32, _p: Vec3) -> Vec3 {
         Vec3::zero()
     }
 }
@@ -27,6 +27,7 @@ pub enum MaterialType {
     Lambertian,
     Metal,
     Dielectric,
+    DiffuseLight,
 }
 
 #[derive(Clone)]
@@ -104,5 +105,20 @@ impl Material for Dielectric {
         };
 
         Some((Ray::new(rec.point, scattered, 0.), attenuation))
+    }
+}
+
+#[derive(Clone)]
+pub struct DiffuseLight {
+    pub emit: TextureType,
+}
+
+impl Material for DiffuseLight {
+    fn scatter(&self, _ray_in: &Ray, _rec: &HitRecord, _rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+        None
+    }
+
+    fn emitted(&self, u: f32, v: f32, p: Vec3) -> Vec3 {
+        self.emit.value(u, v, p)
     }
 }

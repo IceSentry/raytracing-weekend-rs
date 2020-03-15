@@ -15,19 +15,21 @@ use crate::{
 };
 
 fn color(mut ray: Ray, world: &Hittables, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
-    let mut acc = {
-        let t = 0.5 * (ray.direction.unit().y + 1.0);
-        (1. - t) * Vec3::one() + t * Vec3::new(0.5, 0.7, 1.)
-    };
+    let mut color_accumulator = Vec3::zero();
+    // {
+    //     let t = 0.5 * (ray.direction.unit().y + 1.0);
+    //     (1. - t) * Vec3::one() + t * Vec3::new(0.5, 0.7, 1.)
+    // }
     let mut bounces = 0;
+    let mut strength = Vec3::one();
 
     while let Some(hit) = world.hit(&ray, 0.001, f32::MAX) {
-        match hit.mat.scatter(&ray, &hit, rng) {
-            Some((scattered, attenuation)) => {
-                ray = scattered;
-                acc = attenuation * acc;
-            }
-            None => return acc,
+        let emitted = hit.mat.emitted(hit.u, hit.v, hit.point);
+        color_accumulator += strength * emitted;
+
+        if let Some((scattered, attenuation)) = hit.mat.scatter(&ray, &hit, rng) {
+            ray = scattered;
+            strength *= attenuation;
         }
 
         bounces += 1;
@@ -35,24 +37,22 @@ fn color(mut ray: Ray, world: &Hittables, max_depth: i32, rng: &mut impl Rng) ->
             break;
         }
     }
-    acc
+    color_accumulator
 }
 
 fn _color(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
     match world.hit(r, 0.001, f32::MAX) {
         Some(hit) => {
+            let emitted = hit.mat.emitted(hit.u, hit.v, hit.point);
             if depth < max_depth {
                 if let Some((scattered, attenuation)) = hit.mat.scatter(r, &hit, rng) {
-                    return attenuation * _color(&scattered, world, depth + 1, max_depth, rng);
+                    return emitted
+                        + attenuation * _color(&scattered, world, depth + 1, max_depth, rng);
                 }
             }
-            Vec3::zero()
+            emitted
         }
-        None => {
-            let unit_direction = r.direction.unit();
-            let t = 0.5 * (unit_direction.y + 1.0);
-            (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0)
-        }
+        None => Vec3::zero(),
     }
 }
 
