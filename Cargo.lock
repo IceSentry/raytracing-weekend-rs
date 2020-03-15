@@ -355,6 +355,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive-new"
+version = "0.5.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71f31892cd5c62e414316f2963c5689242c43d8e7bbcaaeca97e5e28c95d91d9"
+dependencies = [
+ "proc-macro2 1.0.9",
+ "quote 1.0.2",
+ "syn 1.0.16",
+]
+
+[[package]]
 name = "derive_builder"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1228,6 +1239,7 @@ dependencies = [
 name = "raytracing-weekend-rs"
 version = "0.1.0"
 dependencies = [
+ "derive-new",
  "derive_builder",
  "enum_dispatch",
  "image",

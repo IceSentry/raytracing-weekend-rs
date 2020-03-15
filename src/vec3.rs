@@ -1,8 +1,8 @@
 use std::{ops, ops::{Neg, Index}};
-
 use impl_ops::*;
+use derive_new::*;
 
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, new)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
@@ -10,10 +10,6 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    pub fn new(x: f32, y: f32, z: f32) -> Self {
-        Vec3 { x, y, z }
-    }
-
     pub fn newi(x: i32, y: i32, z: i32) -> Self {
         Vec3 { x: x as f32, y: y as f32, z: z as f32 }
     }

@@ -1,3 +1,4 @@
+use derive_new::*;
 use enum_dispatch::enum_dispatch;
 
 use crate::{
@@ -17,6 +18,7 @@ pub mod moving_sphere;
 pub mod sphere;
 pub mod xy_rect;
 
+#[derive(new)]
 pub struct HitRecord<'a> {
     pub t: f32,
     pub u: f32,
@@ -24,19 +26,6 @@ pub struct HitRecord<'a> {
     pub point: Vec3,
     pub normal: Vec3,
     pub mat: &'a MaterialType,
-}
-
-impl<'a> HitRecord<'a> {
-    fn new(t: f32, u: f32, v: f32, point: Vec3, normal: Vec3, mat: &'a MaterialType) -> Self {
-        HitRecord {
-            t,
-            u,
-            v,
-            point,
-            normal,
-            mat,
-        }
-    }
 }
 
 #[enum_dispatch]
