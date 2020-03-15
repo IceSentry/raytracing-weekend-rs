@@ -24,8 +24,8 @@ mod vec3;
 
 use crate::{renderer::render, scenes::get_scene_from_name};
 
-const WIDTH: u32 = 1280;
-const HEIGHT: u32 = 720;
+const WIDTH: u32 = 800;
+const HEIGHT: u32 = 800;
 
 fn init_pixels(window: &Window) -> Pixels {
     let surface = Surface::create(window);

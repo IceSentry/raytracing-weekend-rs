@@ -1,8 +1,12 @@
 use crate::{
     camera::{Camera, CameraConfig, CameraConfigBuilder},
     hittable::{
-        bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere, rect::XYRect,
-        sphere::Sphere, Hittables,
+        bvh_node::BvhNode,
+        hittable_list::HittableList,
+        moving_sphere::MovingSphere,
+        rect::{Rect, StaticAxis},
+        sphere::Sphere,
+        Hittables,
     },
     material::{Dielectric, DiffuseLight, Lambertian, MaterialType, Metal},
     random::random_double,
@@ -13,6 +17,7 @@ use crate::{
     vec3::Vec3,
 };
 use rand::Rng;
+use std::ops::Range;
 
 pub struct Scene {
     pub camera: Camera,
@@ -26,7 +31,8 @@ pub fn get_scene_from_name(name: &str, rng: &mut impl Rng) -> Scene {
         "random" => random_scene(rng),
         "earth" => earth(),
         "simple_light" => simple_light(),
-        _ => random_scene(rng),
+        "cornell_box" => cornell_box_scene(),
+        _ => cornell_box_scene(),
     };
 
     println!("{} scene generated", name);
@@ -263,7 +269,7 @@ pub fn simple_light() -> Scene {
                 radius: 2.,
                 mat: light_mat.clone(),
             }),
-            Hittables::from(XYRect::new(3., 5., 1., 3., -2., light_mat)),
+            new_rect(3.0..5.0, 1.0..3.0, -2.0, StaticAxis::Z, light_mat),
         ],
     });
 
@@ -276,4 +282,60 @@ pub fn simple_light() -> Scene {
         camera: Camera::new(config),
         hittables,
     }
+}
+
+pub fn cornell_box() -> Hittables {
+    fn diffuse_color(r: f32, g: f32, b: f32) -> MaterialType {
+        MaterialType::from(Lambertian {
+            albedo: TextureType::from(ConstantTexture {
+                color: Vec3::new(r, g, b),
+            }),
+        })
+    }
+
+    let red = diffuse_color(0.65, 0.05, 0.05);
+    let green = diffuse_color(0.12, 0.45, 0.15);
+    let white = diffuse_color(0.73, 0.73, 0.73);
+
+    let light = MaterialType::from(DiffuseLight {
+        emit: TextureType::from(ConstantTexture {
+            color: Vec3::newi(15, 15, 15),
+        }),
+    });
+
+    Hittables::from(HittableList {
+        list: vec![
+            new_rect(213.0..343.0, 227.0..332.0, 554.0, StaticAxis::Y, light),
+            new_rect(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::Y, white.clone()), //floor
+            new_rect(0.0..555.0, 0.0..555.0, 555.0, StaticAxis::Y, white.clone()), //ceiling
+            new_rect(0.0..555.0, 0.0..555.0, 555.0, StaticAxis::Z, white),       // rear wall
+            new_rect(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::X, red),
+            new_rect(0.0..555.0, 0.0..555.0, 555.0, StaticAxis::X, green),
+        ],
+    })
+}
+
+pub fn cornell_box_scene() -> Scene {
+    let mut cam_config = default_config();
+    cam_config.lookfrom = Vec3::newi(278, 278, -800);
+    cam_config.lookat = Vec3::newi(278, 278, 0);
+    cam_config.focus_dist = 10.;
+    cam_config.vfov = 40.;
+
+    let hittables = cornell_box();
+
+    Scene {
+        camera: Camera::new(cam_config),
+        hittables,
+    }
+}
+
+fn new_rect(
+    r1: Range<f32>,
+    r2: Range<f32>,
+    k: f32,
+    axis: StaticAxis,
+    mat: MaterialType,
+) -> Hittables {
+    Hittables::from(Rect::new(r1, r2, k, axis, mat))
 }
