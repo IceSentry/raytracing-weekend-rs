@@ -27,11 +27,12 @@ fn color(mut ray: Ray, world: &Hittables, max_depth: i32, rng: &mut impl Rng) ->
         let emitted = hit.mat.emitted(hit.u, hit.v, hit.point);
         color_accumulator += strength * emitted;
 
-        if let Some((scattered, attenuation)) = hit.mat.scatter(&ray, &hit, rng) {
-            ray = scattered;
-            strength *= attenuation;
-        } else {
-            break;
+        match hit.mat.scatter(&ray, &hit, rng) {
+            Some((scattered, attenuation)) => {
+                ray = scattered;
+                strength *= attenuation;
+            }
+            None => return color_accumulator,
         }
 
         bounces += 1;
@@ -42,17 +43,21 @@ fn color(mut ray: Ray, world: &Hittables, max_depth: i32, rng: &mut impl Rng) ->
     color_accumulator
 }
 
-fn _color(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
+#[allow(dead_code)]
+fn colorr(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
     match world.hit(r, 0.001, f32::MAX) {
         Some(hit) => {
             let emitted = hit.mat.emitted(hit.u, hit.v, hit.point);
-            if depth < max_depth {
-                if let Some((scattered, attenuation)) = hit.mat.scatter(r, &hit, rng) {
-                    return emitted
-                        + attenuation * _color(&scattered, world, depth + 1, max_depth, rng);
+            if depth > max_depth {
+                return emitted;
+            };
+
+            match hit.mat.scatter(r, &hit, rng) {
+                Some((scattered, attenuation)) => {
+                    emitted + attenuation * colorr(&scattered, world, depth + 1, max_depth, rng)
                 }
+                None => emitted,
             }
-            emitted
         }
         None => Vec3::zero(),
     }
@@ -71,7 +76,7 @@ pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) 
                 let v = (j as f32 + random_double(rng)) / HEIGHT as f32;
                 let ray = cam.get_ray(u, v, rng);
                 col += color(ray, world, max_depth, rng);
-                // col += _color(&ray, world, 0, max_depth, rng);
+                // col += colorr(&ray, world, 0, max_depth, rng);
             }
             col /= num_samples as f32;
             col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
