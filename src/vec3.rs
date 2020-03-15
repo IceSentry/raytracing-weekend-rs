@@ -1,6 +1,7 @@
 use std::{ops, ops::{Neg, Index}};
 use impl_ops::*;
 use derive_new::*;
+use ops::IndexMut;
 
 #[derive(Debug, Copy, Clone, Default, new)]
 pub struct Vec3 {
@@ -81,6 +82,17 @@ impl Index<usize> for Vec3 {
             0 => &self.x,
             1 => &self.y,
             2 => &self.z,
+            _=> unreachable!(),
+        }
+    }
+}
+
+impl IndexMut<usize> for Vec3 {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        match index {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
             _=> unreachable!(),
         }
     }

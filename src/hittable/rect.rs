@@ -1,117 +1,69 @@
 use super::{aabb::AABB, HitRecord, Hittable};
 use crate::{material::MaterialType, vec3::Vec3};
 use derive_new::*;
+use std::ops::Range;
+
+#[derive(Clone, Copy)]
+pub enum StaticAxis {
+    X,
+    Y,
+    Z,
+}
 
 #[derive(Clone, new)]
-pub struct XYRect {
-    x0: f32,
-    x1: f32,
-    y0: f32,
-    y1: f32,
+pub struct Rect {
+    range1: Range<f32>,
+    range2: Range<f32>,
     k: f32,
+    static_axis: StaticAxis,
     material: MaterialType,
 }
 
-impl Hittable for XYRect {
-    fn hit(&self, r: &crate::ray::Ray, t0: f32, t1: f32) -> Option<super::HitRecord> {
-        let t = (self.k - r.origin.z) / r.direction.z;
+impl Hittable for Rect {
+    fn hit(&self, r: &crate::ray::Ray, t0: f32, t1: f32) -> Option<HitRecord> {
+        let axis_index = match self.static_axis {
+            StaticAxis::X => (0, 1, 2),
+            StaticAxis::Y => (1, 0, 2),
+            StaticAxis::Z => (2, 1, 0),
+        };
+        let t = (self.k - r.origin[axis_index.0]) / r.direction[axis_index.0];
+
         if t < t0 || t > t1 {
             return None;
         }
-        let x = r.origin.x + t * r.direction.x;
-        let y = r.origin.y + t * r.direction.y;
-        if x < self.x0 || x > self.x1 || y < self.y0 || y > self.y1 {
+
+        let axis1 = r.origin[axis_index.1] + t * r.direction[axis_index.1];
+        let axis2 = r.origin[axis_index.2] + t * r.direction[axis_index.2];
+
+        if !self.range1.contains(&axis1) || !self.range2.contains(&axis2) {
             return None;
         }
 
-        let u = (x - self.x0) / (self.x1 - self.x0);
-        let v = (x - self.y0) / (self.y1 - self.y0);
+        let u = (axis1 - self.range1.end) / (self.range1.end - self.range1.start);
+        let v = (axis2 - self.range2.end) / (self.range2.end - self.range2.start);
         let point = r.point_at(t);
-        let normal = Vec3::newi(0, 0, 1);
+        let mut normal = Vec3::zero();
+        normal[axis_index.0] = 1.;
 
         Some(HitRecord::new(t, u, v, point, normal, &self.material))
     }
 
-    fn bounding_box(&self, _t0: f32, _t1: f32) -> Option<super::aabb::AABB> {
-        Some(AABB {
-            min: Vec3::new(self.x0, self.y0, self.k - 0.0001),
-            max: Vec3::new(self.x1, self.y1, self.k + 0.0001),
-        })
-    }
-}
+    fn bounding_box(&self, _t0: f32, _t1: f32) -> Option<AABB> {
+        let aabb = match self.static_axis {
+            StaticAxis::X => AABB {
+                min: Vec3::new(self.k - 0.0001, self.range1.start, self.range2.start),
+                max: Vec3::new(self.k + 0.0001, self.range1.end, self.range2.end),
+            },
+            StaticAxis::Y => AABB {
+                min: Vec3::new(self.range1.start, self.k - 0.0001, self.range2.start),
+                max: Vec3::new(self.range1.end, self.k + 0.0001, self.range2.end),
+            },
+            StaticAxis::Z => AABB {
+                min: Vec3::new(self.range1.start, self.range2.start, self.k - 0.0001),
+                max: Vec3::new(self.range1.end, self.range2.end, self.k + 0.0001),
+            },
+        };
 
-#[derive(Clone, new)]
-pub struct XZRect {
-    x0: f32,
-    x1: f32,
-    z0: f32,
-    z1: f32,
-    k: f32,
-    material: MaterialType,
-}
-
-impl Hittable for XZRect {
-    fn hit(&self, r: &crate::ray::Ray, t0: f32, t1: f32) -> Option<super::HitRecord> {
-        let t = (self.k - r.origin.y) / r.direction.y;
-        if t < t0 || t > t1 {
-            return None;
-        }
-        let x = r.origin.x + t * r.direction.x;
-        let z = r.origin.z + t * r.direction.z;
-        if x < self.x0 || x > self.x1 || z < self.z0 || z > self.z1 {
-            return None;
-        }
-
-        let u = (x - self.x0) / (self.x1 - self.x0);
-        let v = (z - self.z0) / (self.z1 - self.z0);
-        let point = r.point_at(t);
-        let normal = Vec3::newi(0, 1, 0);
-
-        Some(HitRecord::new(t, u, v, point, normal, &self.material))
-    }
-
-    fn bounding_box(&self, _t0: f32, _t1: f32) -> Option<super::aabb::AABB> {
-        Some(AABB {
-            min: Vec3::new(self.x0, self.k - 0.0001, self.z0),
-            max: Vec3::new(self.x1, self.k + 0.0001, self.z1),
-        })
-    }
-}
-
-#[derive(Clone, new)]
-pub struct YZRect {
-    y0: f32,
-    y1: f32,
-    z0: f32,
-    z1: f32,
-    k: f32,
-    material: MaterialType,
-}
-
-impl Hittable for YZRect {
-    fn hit(&self, r: &crate::ray::Ray, t0: f32, t1: f32) -> Option<super::HitRecord> {
-        let t = (self.k - r.origin.x) / r.direction.x;
-        if t < t0 || t > t1 {
-            return None;
-        }
-        let y = r.origin.y + t * r.direction.y;
-        let z = r.origin.z + t * r.direction.z;
-        if y < self.y0 || y > self.y1 || z < self.z0 || z > self.z1 {
-            return None;
-        }
-
-        let u = (y - self.y0) / (self.y1 - self.y0);
-        let v = (z - self.z0) / (self.z1 - self.z0);
-        let point = r.point_at(t);
-        let normal = Vec3::newi(1, 0, 0);
-
-        Some(HitRecord::new(t, u, v, point, normal, &self.material))
-    }
-
-    fn bounding_box(&self, _t0: f32, _t1: f32) -> Option<super::aabb::AABB> {
-        Some(AABB {
-            min: Vec3::new(self.k - 0.0001, self.y0, self.z0),
-            max: Vec3::new(self.k + 0.0001, self.y1, self.z1),
-        })
+        Some(aabb)
     }
 }
