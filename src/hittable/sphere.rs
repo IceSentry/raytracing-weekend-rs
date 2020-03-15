@@ -1,5 +1,5 @@
 use crate::{
-    hittable::{aabb::AABB, HitRecord, Hittable},
+    hittable::{aabb::AABB, get_sphere_uv, HitRecord, Hittable},
     material::MaterialType,
     ray::Ray,
     vec3::Vec3,
@@ -22,35 +22,32 @@ impl Hittable for Sphere {
         let discriminant = b * b - a * c;
 
         if discriminant > 0. {
-            let create_rec = |t: f32| -> HitRecord {
+            let create_hit_rec = |t: f32| -> Option<HitRecord> {
                 let point = r.point_at(t);
-                HitRecord {
-                    t,
-                    point,
-                    normal: (point - self.center) / self.radius,
-                    mat: &self.mat,
-                }
+                let normal = (point - self.center) / self.radius;
+                let (u, v) = get_sphere_uv(normal);
+                Some(HitRecord::new(t, u, v, point, normal, &self.mat))
             };
 
             let mut t = (-b - discriminant.sqrt()) / a;
 
             if t < t_max && t > t_min {
-                return Some(create_rec(t));
+                return create_hit_rec(t);
             }
 
             t = (-b + discriminant.sqrt()) / a;
             if t < t_max && t > t_min {
-                return Some(create_rec(t));
+                return create_hit_rec(t);
             }
         }
         None
     }
 
     fn bounding_box(&self, _: f32, _: f32) -> Option<AABB> {
-        let bounding_box = AABB {
-            min: self.center - Vec3::new(self.radius, self.radius, self.radius),
-            max: self.center + Vec3::new(self.radius, self.radius, self.radius),
-        };
-        Some(bounding_box)
+        let radius = Vec3::new(self.radius, self.radius, self.radius);
+        Some(AABB {
+            min: self.center - radius,
+            max: self.center + radius,
+        })
     }
 }

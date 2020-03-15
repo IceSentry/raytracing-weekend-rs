@@ -14,11 +14,11 @@ pub struct Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
         let target = rec.point + rec.normal + random_in_unit_sphere(rng);
         Some((
-            Ray::new(rec.point, target - rec.point, 0.),
-            self.albedo.value(0., 0., rec.point),
+            Ray::new(rec.point, target - rec.point, ray_in.time),
+            self.albedo.value(rec.u, rec.v, rec.point),
         ))
     }
 }

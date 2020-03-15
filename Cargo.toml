@@ -16,6 +16,7 @@ impl_ops = '0.1.1'
 enum_dispatch = '0.2.1'
 structopt = '0.3.11'
 lazy_static = '1.4.0'
+image = "0.23.1"
 
 [dependencies.rand]
 version = '0.7.3'

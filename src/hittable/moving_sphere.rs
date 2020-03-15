@@ -1,7 +1,7 @@
 use crate::{
     hittable::{
         aabb::{surrounding_box, AABB},
-        HitRecord, Hittable,
+        get_sphere_uv, HitRecord, Hittable,
     },
     material::MaterialType,
     ray::Ray,
@@ -28,38 +28,36 @@ impl Hittable for MovingSphere {
         let discriminant = b * b - a * c;
 
         if discriminant > 0. {
-            let create_rec = |t: f32| -> HitRecord {
+            let create_rec = |t: f32| -> Option<HitRecord> {
                 let point = r.point_at(t);
-                HitRecord {
-                    t,
-                    point,
-                    normal: (point - self.center(r.time)) / self.radius,
-                    mat: &self.material,
-                }
+                let normal = (point - self.center(r.time)) / self.radius;
+                let (u, v) = get_sphere_uv(normal);
+                Some(HitRecord::new(t, u, v, point, normal, &self.material))
             };
 
             let mut t = (-b - discriminant.sqrt()) / a;
 
             if t < t_max && t > t_min {
-                return Some(create_rec(t));
+                return create_rec(t);
             }
 
             t = (-b + discriminant.sqrt()) / a;
             if t < t_max && t > t_min {
-                return Some(create_rec(t));
+                return create_rec(t);
             }
         }
         None
     }
 
     fn bounding_box(&self, t0: f32, t1: f32) -> Option<AABB> {
+        let radius = Vec3::new(self.radius, self.radius, self.radius);
         let box0 = AABB {
-            min: self.center(t0) - Vec3::new(self.radius, self.radius, self.radius),
-            max: self.center(t0) + Vec3::new(self.radius, self.radius, self.radius),
+            min: self.center(t0) - radius,
+            max: self.center(t0) + radius,
         };
         let box1 = AABB {
-            min: self.center(t1) - Vec3::new(self.radius, self.radius, self.radius),
-            max: self.center(t1) + Vec3::new(self.radius, self.radius, self.radius),
+            min: self.center(t1) - radius,
+            max: self.center(t1) + radius,
         };
         Some(surrounding_box(box0, box1))
     }

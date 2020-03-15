@@ -1,7 +1,7 @@
 use crate::{
     texture::{
         checker_texture::CheckerTexture, constant_texture::ConstantTexture,
-        noise_texture::NoiseTexture,
+        image_texture::ImageTexture, noise_texture::NoiseTexture,
     },
     vec3::Vec3,
 };
@@ -9,6 +9,7 @@ use enum_dispatch::enum_dispatch;
 
 pub mod checker_texture;
 pub mod constant_texture;
+pub mod image_texture;
 pub mod noise_texture;
 pub mod perlin;
 
@@ -18,6 +19,7 @@ pub enum TextureType {
     ConstantTexture,
     CheckerTexture,
     NoiseTexture,
+    ImageTexture,
 }
 
 #[enum_dispatch]
