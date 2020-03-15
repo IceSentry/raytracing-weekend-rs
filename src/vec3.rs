@@ -23,7 +23,7 @@ impl Vec3 {
     }
 
     pub fn squared_norm(&self) -> f32 {
-        (self.x * self.x + self.y * self.y + self.z * self.z)
+        self.x * self.x + self.y * self.y + self.z * self.z
     }
 
     /// length()
