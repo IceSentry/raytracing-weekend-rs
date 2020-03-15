@@ -4,7 +4,7 @@ use enum_dispatch::enum_dispatch;
 use crate::{
     hittable::{
         aabb::AABB, bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere,
-        sphere::Sphere, xy_rect::XYRect,
+        rect::XYRect, sphere::Sphere,
     },
     material::MaterialType,
     ray::Ray,
@@ -15,8 +15,8 @@ pub mod aabb;
 pub mod bvh_node;
 pub mod hittable_list;
 pub mod moving_sphere;
+pub mod rect;
 pub mod sphere;
-pub mod xy_rect;
 
 #[derive(new)]
 pub struct HitRecord<'a> {

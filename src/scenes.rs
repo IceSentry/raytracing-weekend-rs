@@ -1,8 +1,8 @@
 use crate::{
     camera::{Camera, CameraConfig, CameraConfigBuilder},
     hittable::{
-        bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere,
-        sphere::Sphere, xy_rect::XYRect, Hittables,
+        bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere, rect::XYRect,
+        sphere::Sphere, Hittables,
     },
     material::{Dielectric, DiffuseLight, Lambertian, MaterialType, Metal},
     random::random_double,
