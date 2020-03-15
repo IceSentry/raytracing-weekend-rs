@@ -1,17 +1,16 @@
 use crate::{
-    camera::Camera,
+    camera::{Camera, CameraConfig, CameraConfigBuilder},
     hittable::{
         bvh_node::BvhNode, hittable_list::HittableList, moving_sphere::MovingSphere,
-        sphere::Sphere, Hittables,
+        sphere::Sphere, xy_rect::XYRect, Hittables,
     },
-    material::{Dielectric, Lambertian, MaterialType, Metal},
+    material::{Dielectric, DiffuseLight, Lambertian, MaterialType, Metal},
     random::random_double,
     texture::{
         checker_texture::CheckerTexture, constant_texture::ConstantTexture,
         image_texture::ImageTexture, noise_texture::NoiseTexture, perlin::Perlin, TextureType,
     },
     vec3::Vec3,
-    HEIGHT, WIDTH,
 };
 use rand::Rng;
 
@@ -26,6 +25,7 @@ pub fn get_scene_from_name(name: &str, rng: &mut impl Rng) -> Scene {
         "two_perlin_spheres" => two_perlin_spheres(),
         "random" => random_scene(rng),
         "earth" => earth(),
+        "simple_light" => simple_light(),
         _ => random_scene(rng),
     };
 
@@ -34,25 +34,18 @@ pub fn get_scene_from_name(name: &str, rng: &mut impl Rng) -> Scene {
     scene
 }
 
+fn default_config() -> CameraConfig {
+    CameraConfigBuilder::default()
+        .lookfrom(Vec3::new(13., 2., 3.))
+        .lookat(Vec3::new(0., 0., 0.))
+        .vfov(20.)
+        .focus_dist(10.)
+        .build()
+        .unwrap()
+}
+
 fn default_camera() -> Camera {
-    let lookfrom = Vec3::new(13., 2., 3.);
-    let lookat = Vec3::new(0., 0., 0.);
-    let vup = Vec3::new(0., 1., 0.);
-    let vfov = 20.;
-    let ratio = WIDTH as f32 / HEIGHT as f32;
-    let dist_to_focus = 10.;
-    let aperture = 0.0;
-    Camera::new(
-        lookfrom,
-        lookat,
-        vup,
-        vfov,
-        ratio,
-        aperture,
-        dist_to_focus,
-        0.,
-        1.,
-    )
+    Camera::new(default_config())
 }
 
 fn default_checker() -> TextureType {
@@ -234,5 +227,53 @@ pub fn earth() -> Scene {
     Scene {
         camera: default_camera(),
         hittables: earth,
+    }
+}
+
+pub fn simple_light() -> Scene {
+    let noise_texture = TextureType::from(NoiseTexture {
+        perlin: Perlin,
+        scale: 7.,
+    });
+
+    let light_mat = MaterialType::from(DiffuseLight {
+        emit: TextureType::from(ConstantTexture {
+            color: Vec3::newi(4, 4, 4),
+        }),
+    });
+
+    let hittables = Hittables::from(HittableList {
+        list: vec![
+            Hittables::from(Sphere {
+                center: Vec3::newi(0, -1000, 0),
+                radius: 1000.,
+                mat: MaterialType::from(Lambertian {
+                    albedo: noise_texture.clone(),
+                }),
+            }),
+            Hittables::from(Sphere {
+                center: Vec3::newi(0, 2, 0),
+                radius: 2.,
+                mat: MaterialType::from(Lambertian {
+                    albedo: noise_texture,
+                }),
+            }),
+            Hittables::from(Sphere {
+                center: Vec3::newi(0, 7, 0),
+                radius: 2.,
+                mat: light_mat.clone(),
+            }),
+            Hittables::from(XYRect::new(3., 5., 1., 3., -2., light_mat)),
+        ],
+    });
+
+    let mut config = default_config();
+    config.lookfrom = Vec3::newi(16, 3, 2);
+    config.lookat = Vec3::new(0., 1., 0.);
+    config.vfov = 40.;
+
+    Scene {
+        camera: Camera::new(config),
+        hittables,
     }
 }

@@ -14,6 +14,10 @@ impl Vec3 {
         Vec3 { x, y, z }
     }
 
+    pub fn newi(x: i32, y: i32, z: i32) -> Self {
+        Vec3 { x: x as f32, y: y as f32, z: z as f32 }
+    }
+
     pub fn zero() -> Self {
         Vec3::new(0., 0., 0.)
     }
