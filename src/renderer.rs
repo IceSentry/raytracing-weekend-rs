@@ -16,10 +16,10 @@ use crate::{
 
 fn color(mut ray: Ray, world: &Hittables, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
     let mut color_accumulator = Vec3::zero();
-    // {
+    // let mut color_accumulator = {
     //     let t = 0.5 * (ray.direction.unit().y + 1.0);
     //     (1. - t) * Vec3::one() + t * Vec3::new(0.5, 0.7, 1.)
-    // }
+    // };
     let mut bounces = 0;
     let mut strength = Vec3::one();
 
@@ -30,6 +30,8 @@ fn color(mut ray: Ray, world: &Hittables, max_depth: i32, rng: &mut impl Rng) ->
         if let Some((scattered, attenuation)) = hit.mat.scatter(&ray, &hit, rng) {
             ray = scattered;
             strength *= attenuation;
+        } else {
+            break;
         }
 
         bounces += 1;
@@ -69,6 +71,7 @@ pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) 
                 let v = (j as f32 + random_double(rng)) / HEIGHT as f32;
                 let ray = cam.get_ray(u, v, rng);
                 col += color(ray, world, max_depth, rng);
+                // col += _color(&ray, world, 0, max_depth, rng);
             }
             col /= num_samples as f32;
             col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
