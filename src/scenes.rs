@@ -2,6 +2,7 @@ use crate::{
     camera::{Camera, CameraConfig, CameraConfigBuilder},
     hittable::{
         bvh_node::BvhNode,
+        flip_normals::FlipNormals,
         hittable_list::HittableList,
         moving_sphere::MovingSphere,
         rect::{Rect, StaticAxis},
@@ -269,7 +270,13 @@ pub fn simple_light() -> Scene {
                 radius: 2.,
                 mat: light_mat.clone(),
             }),
-            new_rect(3.0..5.0, 1.0..3.0, -2.0, StaticAxis::Z, light_mat),
+            Hittables::from(Rect::new(
+                3.0..5.0,
+                1.0..3.0,
+                -2.0,
+                StaticAxis::Z,
+                light_mat,
+            )),
         ],
     });
 
@@ -305,12 +312,42 @@ pub fn cornell_box() -> Hittables {
 
     Hittables::from(HittableList {
         list: vec![
-            new_rect(213.0..343.0, 227.0..332.0, 554.0, StaticAxis::Y, light),
-            new_rect(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::Y, white.clone()), //floor
-            new_rect(0.0..555.0, 0.0..555.0, 555.0, StaticAxis::Y, white.clone()), //ceiling
-            new_rect(0.0..555.0, 0.0..555.0, 555.0, StaticAxis::Z, white),       // rear wall
-            new_rect(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::X, red),
-            new_rect(0.0..555.0, 0.0..555.0, 555.0, StaticAxis::X, green),
+            Hittables::from(Rect::new(
+                213.0..343.0,
+                227.0..332.0,
+                554.0,
+                StaticAxis::Y,
+                light,
+            )),
+            Hittables::from(Rect::new(
+                0.0..555.0,
+                0.0..555.0,
+                0.0,
+                StaticAxis::Y,
+                white.clone(),
+            )), //floor
+            Hittables::from(FlipNormals::new(Hittables::from(Rect::new(
+                0.0..555.0,
+                0.0..555.0,
+                555.0,
+                StaticAxis::Y,
+                white.clone(),
+            )))), //ceiling
+            Hittables::from(FlipNormals::new(Hittables::from(Rect::new(
+                0.0..555.0,
+                0.0..555.0,
+                555.0,
+                StaticAxis::Z,
+                white,
+            )))), // rear wall
+            Hittables::from(Rect::new(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::X, red)),
+            Hittables::from(FlipNormals::new(Hittables::from(Rect::new(
+                0.0..555.0,
+                0.0..555.0,
+                555.0,
+                StaticAxis::X,
+                green,
+            )))),
         ],
     })
 }
@@ -328,14 +365,4 @@ pub fn cornell_box_scene() -> Scene {
         camera: Camera::new(cam_config),
         hittables,
     }
-}
-
-fn new_rect(
-    r1: Range<f32>,
-    r2: Range<f32>,
-    k: f32,
-    axis: StaticAxis,
-    mat: MaterialType,
-) -> Hittables {
-    Hittables::from(Rect::new(r1, r2, k, axis, mat))
 }
