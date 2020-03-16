@@ -1,6 +1,7 @@
 use crate::{
     camera::{Camera, CameraConfig, CameraConfigBuilder},
     hittable::{
+        box_rect::BoxRect,
         bvh_node::BvhNode,
         flip_normals::FlipNormals,
         hittable_list::HittableList,
@@ -249,14 +250,14 @@ pub fn simple_light() -> Scene {
     }
 }
 
-pub fn cornell_box() -> Hittables {
+pub fn cornell_box() -> Vec<Hittables> {
     let red = Lambertian::new(ConstantTexture::new(0.65, 0.05, 0.05));
     let green = Lambertian::new(ConstantTexture::new(0.12, 0.45, 0.15));
     let white = Lambertian::new(ConstantTexture::new(0.73, 0.73, 0.73));
 
     let light = DiffuseLight::new(ConstantTexture::new(15.0, 15.0, 15.0));
 
-    HittableList::new(vec![
+    let background_box = HittableList::new(vec![
         Rect::new(213.0..343.0, 227.0..332.0, 554.0, StaticAxis::Y, light),
         Rect::new(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::Y, white.clone()), //floor
         FlipNormals::new(Rect::new(
@@ -271,7 +272,7 @@ pub fn cornell_box() -> Hittables {
             0.0..555.0,
             555.0,
             StaticAxis::Z,
-            white,
+            white.clone(),
         )), // rear wall
         Rect::new(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::X, red),
         FlipNormals::new(Rect::new(
@@ -281,7 +282,21 @@ pub fn cornell_box() -> Hittables {
             StaticAxis::X,
             green,
         )),
-    ])
+    ]);
+
+    vec![
+        background_box,
+        BoxRect::new(
+            Vec3::newi(130, 0, 65),
+            Vec3::newi(295, 165, 230),
+            white.clone(),
+        ),
+        BoxRect::new(
+            Vec3::newi(265, 0, 295),
+            Vec3::newi(430, 330, 460),
+            white.clone(),
+        ),
+    ]
 }
 
 pub fn cornell_box_scene() -> Scene {
@@ -291,10 +306,8 @@ pub fn cornell_box_scene() -> Scene {
     cam_config.focus_dist = 10.;
     cam_config.vfov = 40.;
 
-    let hittables = cornell_box();
-
     Scene {
         camera: Camera::new(cam_config),
-        hittables,
+        hittables: BvhNode::new(cornell_box(), 0.0, 1.0, 0),
     }
 }

@@ -3,8 +3,8 @@ use enum_dispatch::enum_dispatch;
 
 use crate::{
     hittable::{
-        aabb::AABB, bvh_node::BvhNode, flip_normals::FlipNormals, hittable_list::HittableList,
-        moving_sphere::MovingSphere, rect::Rect, sphere::Sphere,
+        aabb::AABB, box_rect::BoxRect, bvh_node::BvhNode, flip_normals::FlipNormals,
+        hittable_list::HittableList, moving_sphere::MovingSphere, rect::Rect, sphere::Sphere,
     },
     material::MaterialType,
     ray::Ray,
@@ -12,6 +12,7 @@ use crate::{
 };
 
 pub mod aabb;
+pub mod box_rect;
 pub mod bvh_node;
 pub mod flip_normals;
 pub mod hittable_list;
@@ -44,6 +45,7 @@ pub enum Hittables {
     BvhNode,
     Rect,
     FlipNormals,
+    BoxRect,
 }
 
 pub fn get_sphere_uv(p: Vec3) -> (f32, f32) {
