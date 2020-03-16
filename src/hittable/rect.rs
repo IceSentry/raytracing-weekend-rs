@@ -1,6 +1,5 @@
-use super::{aabb::AABB, HitRecord, Hittable};
+use super::{aabb::AABB, HitRecord, Hittable, Hittables};
 use crate::{material::MaterialType, vec3::Vec3};
-use derive_new::*;
 use std::ops::Range;
 
 #[derive(Clone, Copy)]
@@ -10,13 +9,31 @@ pub enum StaticAxis {
     Z,
 }
 
-#[derive(Clone, new)]
+#[derive(Clone)]
 pub struct Rect {
     range1: Range<f32>,
     range2: Range<f32>,
     k: f32,
     static_axis: StaticAxis,
     material: MaterialType,
+}
+
+impl Rect {
+    pub fn new(
+        range1: Range<f32>,
+        range2: Range<f32>,
+        k: f32,
+        static_axis: StaticAxis,
+        material: MaterialType,
+    ) -> Hittables {
+        Hittables::from(Rect {
+            range1,
+            range2,
+            k,
+            static_axis,
+            material,
+        })
+    }
 }
 
 impl Hittable for Rect {

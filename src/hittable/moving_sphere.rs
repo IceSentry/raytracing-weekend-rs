@@ -7,13 +7,13 @@ use crate::{
     ray::Ray,
     vec3::Vec3,
 };
+use std::ops::Range;
 
 #[derive(Clone)]
 pub struct MovingSphere {
     pub center0: Vec3,
     pub center1: Vec3,
-    pub time0: f32,
-    pub time1: f32,
+    pub time: Range<f32>,
     pub radius: f32,
     pub material: MaterialType,
 }
@@ -66,6 +66,7 @@ impl Hittable for MovingSphere {
 impl MovingSphere {
     fn center(&self, time: f32) -> Vec3 {
         self.center0
-            + ((time - self.time0) / (self.time1 - self.time0)) * (self.center1 - self.center0)
+            + ((time - self.time.start) / (self.time.end - self.time.start))
+                * (self.center1 - self.center0)
     }
 }

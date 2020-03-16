@@ -57,7 +57,7 @@ fn cmp_sort(a: &Hittables, b: &Hittables, index: usize) -> Ordering {
 }
 
 impl BvhNode {
-    pub fn new(list: Vec<Hittables>, time0: f32, time1: f32, depth: i32) -> Self {
+    pub fn new(list: Vec<Hittables>, time0: f32, time1: f32, depth: i32) -> Hittables {
         let axis = depth % 3;
         let mut list = list;
         let n = list.len();
@@ -76,8 +76,8 @@ impl BvhNode {
                 let left_list = list[..(half as usize)].to_vec();
                 let right_list = list[(half as usize)..].to_vec();
                 (
-                    Hittables::BvhNode(BvhNode::new(left_list, time0, time1, depth + 1)),
-                    Hittables::BvhNode(BvhNode::new(right_list, time0, time1, depth + 1)),
+                    BvhNode::new(left_list, time0, time1, depth + 1),
+                    BvhNode::new(right_list, time0, time1, depth + 1),
                 )
             }
         };
@@ -86,11 +86,11 @@ impl BvhNode {
             left.bounding_box(time0, time1),
             right.bounding_box(time0, time1),
         ) {
-            (Some(box_left), Some(box_right)) => BvhNode {
+            (Some(box_left), Some(box_right)) => Hittables::from(BvhNode {
                 left: Box::new(left),
                 right: Box::new(right),
                 bounding_box: surrounding_box(box_left, box_right),
-            },
+            }),
             _ => panic!("no bounding box in BvhNode constructor"),
         }
     }

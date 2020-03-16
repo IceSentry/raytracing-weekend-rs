@@ -18,7 +18,6 @@ use crate::{
     vec3::Vec3,
 };
 use rand::Rng;
-use std::ops::Range;
 
 pub struct Scene {
     pub camera: Camera,
@@ -57,12 +56,8 @@ fn default_camera() -> Camera {
 
 fn default_checker() -> TextureType {
     TextureType::from(CheckerTexture {
-        odd: Box::new(TextureType::from(ConstantTexture {
-            color: Vec3::new(0.2, 0.3, 0.1),
-        })),
-        even: Box::new(TextureType::from(ConstantTexture {
-            color: Vec3::new(0.9, 0.9, 0.9),
-        })),
+        odd: Box::new(ConstantTexture::new(0.2, 0.3, 0.1)),
+        even: Box::new(ConstantTexture::new(0.9, 0.9, 0.9)),
     })
 }
 
@@ -71,9 +66,7 @@ pub fn random_scene(rng: &mut impl Rng) -> Scene {
         Hittables::from(Sphere {
             center: Vec3::new(0., -1000., 0.),
             radius: 1000.,
-            mat: MaterialType::from(Lambertian {
-                albedo: default_checker(),
-            }),
+            mat: Lambertian::new(default_checker()),
         }),
         Hittables::from(Sphere {
             center: Vec3::new(0., 1., 0.),
@@ -83,11 +76,7 @@ pub fn random_scene(rng: &mut impl Rng) -> Scene {
         Hittables::from(Sphere {
             center: Vec3::new(-4., 1., 0.),
             radius: 1.,
-            mat: MaterialType::from(Lambertian {
-                albedo: TextureType::from(ConstantTexture {
-                    color: Vec3::new(0.4, 0.2, 0.1),
-                }),
-            }),
+            mat: Lambertian::new(ConstantTexture::new(0.4, 0.2, 0.1)),
         }),
         Hittables::from(Sphere {
             center: Vec3::new(4., 1., 0.),
@@ -109,15 +98,11 @@ pub fn random_scene(rng: &mut impl Rng) -> Scene {
 
             if (center - Vec3::new(4., 0.2, 0.)).norm() > 0.9 {
                 let material = match random_double(rng) {
-                    x if (0.0..0.8).contains(&x) => MaterialType::from(Lambertian {
-                        albedo: TextureType::from(ConstantTexture {
-                            color: Vec3::new(
-                                random_double(rng) * random_double(rng),
-                                random_double(rng) * random_double(rng),
-                                random_double(rng) * random_double(rng),
-                            ),
-                        }),
-                    }),
+                    x if (0.0..0.8).contains(&x) => Lambertian::new(ConstantTexture::new(
+                        random_double(rng) * random_double(rng),
+                        random_double(rng) * random_double(rng),
+                        random_double(rng) * random_double(rng),
+                    )),
                     x if (0.8..0.95).contains(&x) => MaterialType::from(Metal {
                         albedo: Vec3::new(
                             0.5 * (1. + random_double(rng)),
@@ -133,9 +118,8 @@ pub fn random_scene(rng: &mut impl Rng) -> Scene {
                 world.push(match material {
                     MaterialType::Lambertian(..) => Hittables::from(MovingSphere {
                         center0: center,
-                        center1: center + Vec3::new(0., 0.5 * random_double(rng), 0.),
-                        time0: 0.,
-                        time1: 1.0,
+                        center1: center + Vec3::new(0.0, 0.5 * random_double(rng), 0.0),
+                        time: 0.0..1.0,
                         radius,
                         material,
                     }),
@@ -151,29 +135,23 @@ pub fn random_scene(rng: &mut impl Rng) -> Scene {
 
     Scene {
         camera: default_camera(),
-        hittables: Hittables::BvhNode(BvhNode::new(world, 0., 1., 0)),
+        hittables: BvhNode::new(world, 0.0, 1.0, 0),
     }
 }
 
 pub fn two_spheres() -> Scene {
-    let hittables = Hittables::from(HittableList {
-        list: vec![
-            Hittables::from(Sphere {
-                center: Vec3::new(0., 10., 0.),
-                radius: 10.,
-                mat: MaterialType::from(Lambertian {
-                    albedo: default_checker(),
-                }),
-            }),
-            Hittables::from(Sphere {
-                center: Vec3::new(0., -10., 0.),
-                radius: 10.,
-                mat: MaterialType::from(Lambertian {
-                    albedo: default_checker(),
-                }),
-            }),
-        ],
-    });
+    let hittables = HittableList::new(vec![
+        Hittables::from(Sphere {
+            center: Vec3::new(0.0, 10.0, 0.0),
+            radius: 10.0,
+            mat: Lambertian::new(default_checker()),
+        }),
+        Hittables::from(Sphere {
+            center: Vec3::new(0.0, -10.0, 0.0),
+            radius: 10.0,
+            mat: Lambertian::new(default_checker()),
+        }),
+    ]);
 
     Scene {
         camera: default_camera(),
@@ -187,24 +165,18 @@ pub fn two_perlin_spheres() -> Scene {
         scale: 7.,
     });
 
-    let hittables = Hittables::from(HittableList {
-        list: vec![
-            Hittables::from(Sphere {
-                center: Vec3::new(0., -1000., 0.),
-                radius: 1000.,
-                mat: MaterialType::from(Lambertian {
-                    albedo: noise_texture.clone(),
-                }),
-            }),
-            Hittables::from(Sphere {
-                center: Vec3::new(0., 2., 0.),
-                radius: 2.,
-                mat: MaterialType::from(Lambertian {
-                    albedo: noise_texture,
-                }),
-            }),
-        ],
-    });
+    let hittables = HittableList::new(vec![
+        Hittables::from(Sphere {
+            center: Vec3::new(0.0, -1000.0, 0.0),
+            radius: 1000.0,
+            mat: Lambertian::new(noise_texture.clone()),
+        }),
+        Hittables::from(Sphere {
+            center: Vec3::new(0.0, 2.0, 0.0),
+            radius: 2.,
+            mat: Lambertian::new(noise_texture),
+        }),
+    ]);
 
     Scene {
         camera: default_camera(),
@@ -220,8 +192,8 @@ pub fn earth() -> Scene {
     let (nx, ny) = image.dimensions();
 
     let earth = Hittables::from(Sphere {
-        center: Vec3::new(0., 0., 0.),
-        radius: 2.,
+        center: Vec3::new(0.0, 0.0, 0.0),
+        radius: 2.0,
         mat: MaterialType::from(Lambertian {
             albedo: TextureType::from(ImageTexture {
                 data: image.into_raw(),
@@ -244,46 +216,32 @@ pub fn simple_light() -> Scene {
     });
 
     let light_mat = MaterialType::from(DiffuseLight {
-        emit: TextureType::from(ConstantTexture {
-            color: Vec3::newi(4, 4, 4),
-        }),
+        emit: ConstantTexture::new(4.0, 4.0, 4.0),
     });
 
-    let hittables = Hittables::from(HittableList {
-        list: vec![
-            Hittables::from(Sphere {
-                center: Vec3::newi(0, -1000, 0),
-                radius: 1000.,
-                mat: MaterialType::from(Lambertian {
-                    albedo: noise_texture.clone(),
-                }),
-            }),
-            Hittables::from(Sphere {
-                center: Vec3::newi(0, 2, 0),
-                radius: 2.,
-                mat: MaterialType::from(Lambertian {
-                    albedo: noise_texture,
-                }),
-            }),
-            Hittables::from(Sphere {
-                center: Vec3::newi(0, 7, 0),
-                radius: 2.,
-                mat: light_mat.clone(),
-            }),
-            Hittables::from(Rect::new(
-                3.0..5.0,
-                1.0..3.0,
-                -2.0,
-                StaticAxis::Z,
-                light_mat,
-            )),
-        ],
-    });
+    let hittables = HittableList::new(vec![
+        Hittables::from(Sphere {
+            center: Vec3::newi(0, -1000, 0),
+            radius: 1000.,
+            mat: Lambertian::new(noise_texture.clone()),
+        }),
+        Hittables::from(Sphere {
+            center: Vec3::newi(0, 2, 0),
+            radius: 2.,
+            mat: Lambertian::new(noise_texture),
+        }),
+        Hittables::from(Sphere {
+            center: Vec3::newi(0, 7, 0),
+            radius: 2.,
+            mat: light_mat.clone(),
+        }),
+        Rect::new(3.0..5.0, 1.0..3.0, -2.0, StaticAxis::Z, light_mat),
+    ]);
 
     let mut config = default_config();
     config.lookfrom = Vec3::newi(16, 3, 2);
-    config.lookat = Vec3::new(0., 1., 0.);
-    config.vfov = 40.;
+    config.lookat = Vec3::newi(0, 1, 0);
+    config.vfov = 40.0;
 
     Scene {
         camera: Camera::new(config),
@@ -292,64 +250,38 @@ pub fn simple_light() -> Scene {
 }
 
 pub fn cornell_box() -> Hittables {
-    fn diffuse_color(r: f32, g: f32, b: f32) -> MaterialType {
-        MaterialType::from(Lambertian {
-            albedo: TextureType::from(ConstantTexture {
-                color: Vec3::new(r, g, b),
-            }),
-        })
-    }
+    let red = Lambertian::new(ConstantTexture::new(0.65, 0.05, 0.05));
+    let green = Lambertian::new(ConstantTexture::new(0.12, 0.45, 0.15));
+    let white = Lambertian::new(ConstantTexture::new(0.73, 0.73, 0.73));
 
-    let red = diffuse_color(0.65, 0.05, 0.05);
-    let green = diffuse_color(0.12, 0.45, 0.15);
-    let white = diffuse_color(0.73, 0.73, 0.73);
+    let light = DiffuseLight::new(ConstantTexture::new(15.0, 15.0, 15.0));
 
-    let light = MaterialType::from(DiffuseLight {
-        emit: TextureType::from(ConstantTexture {
-            color: Vec3::newi(15, 15, 15),
-        }),
-    });
-
-    Hittables::from(HittableList {
-        list: vec![
-            Hittables::from(Rect::new(
-                213.0..343.0,
-                227.0..332.0,
-                554.0,
-                StaticAxis::Y,
-                light,
-            )),
-            Hittables::from(Rect::new(
-                0.0..555.0,
-                0.0..555.0,
-                0.0,
-                StaticAxis::Y,
-                white.clone(),
-            )), //floor
-            Hittables::from(FlipNormals::new(Hittables::from(Rect::new(
-                0.0..555.0,
-                0.0..555.0,
-                555.0,
-                StaticAxis::Y,
-                white.clone(),
-            )))), //ceiling
-            Hittables::from(FlipNormals::new(Hittables::from(Rect::new(
-                0.0..555.0,
-                0.0..555.0,
-                555.0,
-                StaticAxis::Z,
-                white,
-            )))), // rear wall
-            Hittables::from(Rect::new(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::X, red)),
-            Hittables::from(FlipNormals::new(Hittables::from(Rect::new(
-                0.0..555.0,
-                0.0..555.0,
-                555.0,
-                StaticAxis::X,
-                green,
-            )))),
-        ],
-    })
+    HittableList::new(vec![
+        Rect::new(213.0..343.0, 227.0..332.0, 554.0, StaticAxis::Y, light),
+        Rect::new(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::Y, white.clone()), //floor
+        FlipNormals::new(Rect::new(
+            0.0..555.0,
+            0.0..555.0,
+            555.0,
+            StaticAxis::Y,
+            white.clone(),
+        )), //ceiling
+        FlipNormals::new(Rect::new(
+            0.0..555.0,
+            0.0..555.0,
+            555.0,
+            StaticAxis::Z,
+            white,
+        )), // rear wall
+        Rect::new(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::X, red),
+        FlipNormals::new(Rect::new(
+            0.0..555.0,
+            0.0..555.0,
+            555.0,
+            StaticAxis::X,
+            green,
+        )),
+    ])
 }
 
 pub fn cornell_box_scene() -> Scene {

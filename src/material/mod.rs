@@ -35,6 +35,12 @@ pub struct Lambertian {
     pub albedo: TextureType,
 }
 
+impl Lambertian {
+    pub fn new(albedo: TextureType) -> MaterialType {
+        MaterialType::from(Lambertian { albedo })
+    }
+}
+
 impl Material for Lambertian {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
         let target = rec.point + rec.normal + random_in_unit_sphere(rng);
@@ -111,6 +117,12 @@ impl Material for Dielectric {
 #[derive(Clone)]
 pub struct DiffuseLight {
     pub emit: TextureType,
+}
+
+impl DiffuseLight {
+    pub fn new(emit: TextureType) -> MaterialType {
+        MaterialType::from(DiffuseLight { emit })
+    }
 }
 
 impl Material for DiffuseLight {

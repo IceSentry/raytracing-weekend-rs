@@ -6,8 +6,8 @@ pub struct FlipNormals {
 }
 
 impl FlipNormals {
-    pub fn new(ptr: Hittables) -> Self {
-        FlipNormals { ptr: Box::new(ptr) }
+    pub fn new(ptr: Hittables) -> Hittables {
+        Hittables::from(FlipNormals { ptr: Box::new(ptr) })
     }
 }
 

@@ -11,6 +11,12 @@ pub struct HittableList {
     pub list: Vec<Hittables>,
 }
 
+impl HittableList {
+    pub fn new(list: Vec<Hittables>) -> Hittables {
+        Hittables::from(HittableList { list })
+    }
+}
+
 impl Hittable for HittableList {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut closest_so_far = t_max;
