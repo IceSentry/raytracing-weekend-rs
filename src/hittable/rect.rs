@@ -41,7 +41,7 @@ impl Hittable for Rect {
         let axis_index = match self.static_axis {
             StaticAxis::X => (0, 1, 2),
             StaticAxis::Y => (1, 0, 2),
-            StaticAxis::Z => (2, 1, 0),
+            StaticAxis::Z => (2, 0, 1),
         };
         let t = (self.k - r.origin[axis_index.0]) / r.direction[axis_index.0];
 
@@ -56,11 +56,11 @@ impl Hittable for Rect {
             return None;
         }
 
-        let u = (axis1 - self.range1.end) / (self.range1.end - self.range1.start);
-        let v = (axis2 - self.range2.end) / (self.range2.end - self.range2.start);
+        let u = (axis1 - self.range1.start) / (self.range1.end - self.range1.start);
+        let v = (axis2 - self.range2.start) / (self.range2.end - self.range2.start);
         let point = r.point_at(t);
         let mut normal = Vec3::zero();
-        normal[axis_index.0] = 1.;
+        normal[axis_index.0] = 1.0;
 
         Some(HitRecord::new(t, u, v, point, normal, &self.material))
     }
