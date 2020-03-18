@@ -134,6 +134,14 @@ impl_op!(-|a: Vec3, b: f32| -> Vec3 {
     }
 });
 
+impl_op!(-|a: f32, b: Vec3| -> Vec3 {
+    Vec3 {
+        x: a - b.x,
+        y: a - b.y,
+        z: a - b.z,
+    }
+});
+
 impl_op!(-= |a: &mut Vec3, b: Vec3| { 
     *a = *a - b
 });

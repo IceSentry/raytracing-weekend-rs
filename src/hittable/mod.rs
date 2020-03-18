@@ -4,7 +4,8 @@ use enum_dispatch::enum_dispatch;
 use crate::{
     hittable::{
         aabb::AABB, box_rect::BoxRect, bvh_node::BvhNode, flip_normals::FlipNormals,
-        hittable_list::HittableList, moving_sphere::MovingSphere, rect::Rect, sphere::Sphere,
+        hittable_list::HittableList, moving_sphere::MovingSphere, rect::Rect, rotate::RotateY,
+        sphere::Sphere, translate::Translate,
     },
     material::MaterialType,
     ray::Ray,
@@ -18,7 +19,9 @@ pub mod flip_normals;
 pub mod hittable_list;
 pub mod moving_sphere;
 pub mod rect;
+pub mod rotate;
 pub mod sphere;
+pub mod translate;
 
 #[derive(new)]
 pub struct HitRecord<'a> {
@@ -46,6 +49,8 @@ pub enum Hittables {
     Rect,
     FlipNormals,
     BoxRect,
+    Translate,
+    RotateY,
 }
 
 pub fn get_sphere_uv(p: Vec3) -> (f32, f32) {

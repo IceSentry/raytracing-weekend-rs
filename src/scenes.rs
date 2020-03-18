@@ -7,7 +7,9 @@ use crate::{
         hittable_list::HittableList,
         moving_sphere::MovingSphere,
         rect::{Rect, StaticAxis},
+        rotate::RotateY,
         sphere::Sphere,
+        translate::Translate,
         Hittables,
     },
     material::{Dielectric, DiffuseLight, Lambertian, MaterialType, Metal},
@@ -258,7 +260,13 @@ pub fn cornell_box() -> Vec<Hittables> {
     let light = DiffuseLight::new(ConstantTexture::new(15.0, 15.0, 15.0));
 
     let background_box = HittableList::new(vec![
-        Rect::new(213.0..343.0, 227.0..332.0, 554.0, StaticAxis::Y, light),
+        Rect::new(
+            213.0..343.0,
+            227.0..332.0,
+            554.0,
+            StaticAxis::Y,
+            light.clone(),
+        ),
         Rect::new(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::Y, white.clone()), //floor
         FlipNormals::new(Rect::new(
             0.0..555.0,
@@ -286,15 +294,19 @@ pub fn cornell_box() -> Vec<Hittables> {
 
     vec![
         background_box,
-        BoxRect::new(
+        Translate::new(
+            RotateY::new(
+                BoxRect::new(Vec3::zero(), Vec3::newi(165, 165, 165), white.clone()),
+                -18.0,
+            ),
             Vec3::newi(130, 0, 65),
-            Vec3::newi(295, 165, 230),
-            white.clone(),
         ),
-        BoxRect::new(
+        Translate::new(
+            RotateY::new(
+                BoxRect::new(Vec3::zero(), Vec3::newi(165, 330, 165), white.clone()),
+                15.0,
+            ),
             Vec3::newi(265, 0, 295),
-            Vec3::newi(430, 330, 460),
-            white.clone(),
         ),
     ]
 }
