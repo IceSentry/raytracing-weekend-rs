@@ -3,6 +3,7 @@ use crate::{
     hittable::{
         box_rect::BoxRect,
         bvh_node::BvhNode,
+        constant_medium::ConstantMedium,
         flip_normals::FlipNormals,
         hittable_list::HittableList,
         moving_sphere::MovingSphere,
@@ -252,21 +253,15 @@ pub fn simple_light() -> Scene {
     }
 }
 
-pub fn cornell_box() -> Vec<Hittables> {
+pub fn cornell_box() -> Hittables {
     let red = Lambertian::new(ConstantTexture::new(0.65, 0.05, 0.05));
     let green = Lambertian::new(ConstantTexture::new(0.12, 0.45, 0.15));
     let white = Lambertian::new(ConstantTexture::new(0.73, 0.73, 0.73));
 
-    let light = DiffuseLight::new(ConstantTexture::new(15.0, 15.0, 15.0));
+    let light = DiffuseLight::new(ConstantTexture::new(7.0, 7.0, 7.0));
 
-    let background_box = HittableList::new(vec![
-        Rect::new(
-            213.0..343.0,
-            227.0..332.0,
-            554.0,
-            StaticAxis::Y,
-            light.clone(),
-        ),
+    HittableList::new(vec![
+        Rect::new(113.0..443.0, 127.0..432.0, 554.0, StaticAxis::Y, light),
         Rect::new(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::Y, white.clone()), //floor
         FlipNormals::new(Rect::new(
             0.0..555.0,
@@ -290,25 +285,30 @@ pub fn cornell_box() -> Vec<Hittables> {
             StaticAxis::X,
             green,
         )),
-    ]);
+    ])
+}
 
-    vec![
-        background_box,
-        Translate::new(
-            RotateY::new(
-                BoxRect::new(Vec3::zero(), Vec3::newi(165, 165, 165), white.clone()),
-                -18.0,
-            ),
-            Vec3::newi(130, 0, 65),
+fn cornell_smoke() -> Vec<Hittables> {
+    let white = Lambertian::new(ConstantTexture::new(0.73, 0.73, 0.73));
+    let box1 = Translate::new(
+        RotateY::new(
+            BoxRect::new(Vec3::zero(), Vec3::newi(165, 165, 165), white.clone()),
+            -18.0,
         ),
-        Translate::new(
-            RotateY::new(
-                BoxRect::new(Vec3::zero(), Vec3::newi(165, 330, 165), white.clone()),
-                15.0,
-            ),
-            Vec3::newi(265, 0, 295),
+        Vec3::newi(130, 0, 65),
+    );
+    let box2 = Translate::new(
+        RotateY::new(
+            BoxRect::new(Vec3::zero(), Vec3::newi(165, 330, 165), white.clone()),
+            15.0,
         ),
-    ]
+        Vec3::newi(265, 0, 295),
+    );
+
+    let smoke_box1 = ConstantMedium::new(box1, 0.01, ConstantTexture::new(1.0, 1.0, 1.0));
+    let smoke_box2 = ConstantMedium::new(box2, 0.01, ConstantTexture::new(0.0, 0.0, 0.0));
+
+    vec![cornell_box(), smoke_box1, smoke_box2]
 }
 
 pub fn cornell_box_scene() -> Scene {
@@ -320,6 +320,6 @@ pub fn cornell_box_scene() -> Scene {
 
     Scene {
         camera: Camera::new(cam_config),
-        hittables: BvhNode::new(cornell_box(), 0.0, 1.0, 0),
+        hittables: BvhNode::new(cornell_smoke(), 0.0, 1.0, 0),
     }
 }
