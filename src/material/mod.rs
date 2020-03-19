@@ -28,6 +28,7 @@ pub enum MaterialType {
     Metal,
     Dielectric,
     DiffuseLight,
+    Isotropic,
 }
 
 #[derive(Clone)]
@@ -83,10 +84,10 @@ pub struct Dielectric {
 
 impl Material for Dielectric {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
-        let outward_normal: Vec3;
         let reflected = reflect(ray_in.direction, rec.normal);
-        let ni_over_nt: f32;
         let attenuation = Vec3::new(1., 1., 1.);
+        let outward_normal: Vec3;
+        let ni_over_nt: f32;
         let cosine: f32;
 
         if ray_in.direction.dot(rec.normal) > 0. {
@@ -132,5 +133,24 @@ impl Material for DiffuseLight {
 
     fn emitted(&self, u: f32, v: f32, p: Vec3) -> Vec3 {
         self.emit.value(u, v, p)
+    }
+}
+
+#[derive(Clone)]
+pub struct Isotropic {
+    pub albedo: TextureType,
+}
+
+impl Isotropic {
+    pub fn new(albedo: TextureType) -> MaterialType {
+        MaterialType::from(Isotropic { albedo })
+    }
+}
+
+impl Material for Isotropic {
+    fn scatter(&self, _ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+        let scattered = Ray::new(rec.point, random_in_unit_sphere(rng), 0.0);
+        let attenuation = self.albedo.value(rec.u, rec.v, rec.point);
+        Some((scattered, attenuation))
     }
 }

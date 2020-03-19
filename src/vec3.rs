@@ -61,8 +61,16 @@ impl Vec3 {
 
     /// Applies `f` to each element of the vector in turn, giving a new vector.
     #[inline]
-    pub fn map(self, mut f: impl FnMut(f32) -> f32) -> Self {
+    pub fn map(&self, mut f: impl FnMut(f32) -> f32) -> Self {
         Vec3::new(f(self.x), f(self.y), f(self.z))
+    }
+
+    /// Applies `f` to each element of the vector in turn, giving a new vector.
+    #[inline]
+    pub fn map_mut(&mut self, mut f: impl FnMut(f32) -> f32) {
+        self.x = f(self.x);
+        self.y = f(self.y);
+        self.z = f(self.z);
     }
 }
 
