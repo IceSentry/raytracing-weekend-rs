@@ -258,7 +258,7 @@ pub fn cornell_box() -> Hittables {
     let green = Lambertian::new(ConstantTexture::new(0.12, 0.45, 0.15));
     let white = Lambertian::new(ConstantTexture::new(0.73, 0.73, 0.73));
 
-    let light = DiffuseLight::new(ConstantTexture::new(7.0, 7.0, 7.0));
+    let light = DiffuseLight::new(ConstantTexture::new(2.0, 2.0, 2.0));
 
     HittableList::new(vec![
         Rect::new(113.0..443.0, 127.0..432.0, 554.0, StaticAxis::Y, light),
@@ -288,7 +288,7 @@ pub fn cornell_box() -> Hittables {
     ])
 }
 
-fn cornell_smoke() -> Vec<Hittables> {
+fn cornell_boxes() -> (Hittables, Hittables) {
     let white = Lambertian::new(ConstantTexture::new(0.73, 0.73, 0.73));
     let box1 = Translate::new(
         RotateY::new(
@@ -305,6 +305,13 @@ fn cornell_smoke() -> Vec<Hittables> {
         Vec3::newi(265, 0, 295),
     );
 
+    (box1, box2)
+}
+
+#[allow(dead_code)]
+fn cornell_smoke() -> Vec<Hittables> {
+    let (box1, box2) = cornell_boxes();
+
     let smoke_box1 = ConstantMedium::new(box1, 0.01, ConstantTexture::new(1.0, 1.0, 1.0));
     let smoke_box2 = ConstantMedium::new(box2, 0.01, ConstantTexture::new(0.0, 0.0, 0.0));
 
@@ -318,8 +325,10 @@ pub fn cornell_box_scene() -> Scene {
     cam_config.focus_dist = 10.;
     cam_config.vfov = 40.;
 
+    let (box1, box2) = cornell_boxes();
+
     Scene {
         camera: Camera::new(cam_config),
-        hittables: BvhNode::new(cornell_smoke(), 0.0, 1.0, 0),
+        hittables: BvhNode::new(vec![cornell_box(), box1, box2], 0.0, 1.0, 0),
     }
 }

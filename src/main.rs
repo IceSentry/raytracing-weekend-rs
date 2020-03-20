@@ -57,12 +57,12 @@ fn render_to_file(pixels: &[u8]) {
 #[structopt(version = "1.0", author = "IceSentry")]
 struct Opts {
     /// Number of samples
-    #[structopt(short, long, default_value = "8")]
+    #[structopt(short, long, default_value = "25")]
     num_samples: i32,
-    #[structopt(short, long, default_value = "16")]
+    #[structopt(short, long, default_value = "25")]
     depth: i32,
     /// Name of the scene to render
-    #[structopt(short, long, default_value = "random_scene")]
+    #[structopt(short, long, default_value = "default")]
     scene_name: String,
 }
 
