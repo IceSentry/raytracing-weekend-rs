@@ -63,6 +63,14 @@ fn colorr(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut impl
     }
 }
 
+pub fn de_nan(v: f32) -> f32 {
+    if v.is_nan() {
+        0.0
+    } else {
+        v
+    }
+}
+
 pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) -> Vec<u8> {
     (0..WIDTH * HEIGHT)
         .into_par_iter()
@@ -75,8 +83,8 @@ pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) 
                 let u = (i as f32 + random_double(rng)) / WIDTH as f32;
                 let v = (j as f32 + random_double(rng)) / HEIGHT as f32;
                 let ray = cam.get_ray(u, v, rng);
-                col += color(ray, world, max_depth, rng);
-                // col += colorr(&ray, world, 0, max_depth, rng);
+                col += color(ray, world, max_depth, rng).map(de_nan);
+                // col += colorr(&ray, world, 0, max_depth, rng).map(de_nan);
             }
             col /= num_samples as f32;
             col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
