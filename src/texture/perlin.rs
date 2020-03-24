@@ -1,6 +1,6 @@
 use crate::{random::random_double, vec3::Vec3};
 use lazy_static::lazy_static;
-use rand::{rngs::SmallRng, Rng, SeedableRng};
+use rand::{prelude::SliceRandom, rngs::SmallRng, Rng, SeedableRng};
 
 #[derive(Clone)]
 pub struct Perlin;
@@ -48,12 +48,12 @@ impl Perlin {
 fn perlin_generate() -> Vec<Vec3> {
     let rng = &mut SmallRng::from_entropy();
     let mut result = Vec::with_capacity(256);
-    for _ in 0..256 {
+    for _ in 0..255 {
         result.push(
             Vec3::new(
-                2. * random_double(rng) - 1.,
-                2. * random_double(rng) - 1.,
-                2. * random_double(rng) - 1.,
+                2. * random_double(rng) - 1.0,
+                2. * random_double(rng) - 1.0,
+                2. * random_double(rng) - 1.0,
             )
             .unit(),
         );
@@ -61,20 +61,10 @@ fn perlin_generate() -> Vec<Vec3> {
     result
 }
 
-fn permute(p: &mut Vec<u8>, rng: &mut impl Rng) {
-    for i in (1..256).rev() {
-        let target = rng.gen_range(0, i);
-        p.swap(i, target);
-    }
-}
-
 fn perlin_generate_perm() -> Vec<u8> {
     let rng = &mut SmallRng::from_entropy();
-    let mut p = Vec::with_capacity(256);
-    for i in 0..256 {
-        p.push(i as u8);
-    }
-    permute(&mut p, rng);
+    let mut p: Vec<u8> = (0..255).collect();
+    p.shuffle(rng);
     p
 }
 
