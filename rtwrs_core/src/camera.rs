@@ -1,4 +1,4 @@
-use crate::{ray::Ray, vec3::Vec3, HEIGHT, WIDTH};
+use crate::{ray::Ray, vec3::Vec3};
 use derive_builder::*;
 use rand::Rng;
 use std::ops::Range;
@@ -24,6 +24,8 @@ pub struct Camera {
     pub w: Vec3,
     pub lens_radius: f32,
     pub exposure: Range<f32>,
+    pub height: u32,
+    pub width: u32,
 }
 
 #[derive(Default, Builder)]
@@ -32,6 +34,8 @@ pub struct CameraConfig {
     pub lookat: Vec3,
     pub vfov: f32,
     pub focus_dist: f32,
+    pub height: u32,
+    pub width: u32,
     #[builder(default = "Vec3::new(0., 1., 0.)")]
     pub vup: Vec3,
     #[builder(default = "self.default_aspect()")]
@@ -53,7 +57,7 @@ impl Default for Exposure {
 
 impl CameraConfigBuilder {
     fn default_aspect(&self) -> f32 {
-        WIDTH as f32 / HEIGHT as f32
+        self.width.unwrap() as f32 / self.height.unwrap() as f32
     }
 }
 
@@ -82,6 +86,8 @@ impl Camera {
             w,
             lens_radius: config.aperture / 2.,
             exposure: config.exposure.0,
+            width: config.width,
+            height: config.height,
         }
     }
 

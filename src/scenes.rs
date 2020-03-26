@@ -1,4 +1,5 @@
-use crate::{
+use rand::Rng;
+use rtwrs_core::{
     camera::{Camera, CameraConfig, CameraConfigBuilder},
     hittable::{
         box_rect::BoxRect,
@@ -21,7 +22,8 @@ use crate::{
     },
     vec3::Vec3,
 };
-use rand::Rng;
+
+use crate::{HEIGHT, WIDTH};
 
 pub struct Scene {
     pub camera: Camera,
@@ -50,6 +52,8 @@ fn default_config() -> CameraConfig {
         .lookat(Vec3::new(0., 0., 0.))
         .vfov(20.)
         .focus_dist(10.)
+        .width(WIDTH)
+        .height(HEIGHT)
         .build()
         .unwrap()
 }

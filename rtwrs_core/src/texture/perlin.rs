@@ -1,6 +1,6 @@
 use crate::{random::random_double, vec3::Vec3};
 use lazy_static::lazy_static;
-use rand::{prelude::SliceRandom, rngs::SmallRng, Rng, SeedableRng};
+use rand::{prelude::SliceRandom, rngs::SmallRng, SeedableRng};
 
 #[derive(Clone)]
 pub struct Perlin;

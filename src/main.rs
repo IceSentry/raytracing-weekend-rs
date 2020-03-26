@@ -11,18 +11,11 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-mod camera;
-mod hittable;
-mod material;
-mod random;
-mod ray;
-mod renderer;
-mod scenes;
-mod texture;
-mod utils;
-mod vec3;
+use rtwrs_core::renderer::render;
 
-use crate::{renderer::render, scenes::get_scene_from_name};
+mod scenes;
+
+use crate::scenes::get_scene_from_name;
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 800;

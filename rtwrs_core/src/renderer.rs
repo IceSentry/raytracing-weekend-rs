@@ -11,7 +11,6 @@ use crate::{
     random::random_double,
     ray::Ray,
     vec3::Vec3,
-    HEIGHT, WIDTH,
 };
 
 fn color(mut ray: Ray, world: &Hittables, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
@@ -72,16 +71,16 @@ pub fn de_nan(v: f32) -> f32 {
 }
 
 pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) -> Vec<u8> {
-    (0..WIDTH * HEIGHT)
+    (0..cam.width * cam.height)
         .into_par_iter()
         .map_init(SmallRng::from_entropy, |rng, screen_pos| {
-            let i = screen_pos % WIDTH;
-            let j = HEIGHT - 1 - screen_pos / WIDTH; // reverse the height index
+            let i = screen_pos % cam.width;
+            let j = cam.height - 1 - screen_pos / cam.width; // reverse the height index
 
             let mut col = Vec3::zero();
             for _ in 0..num_samples {
-                let u = (i as f32 + random_double(rng)) / WIDTH as f32;
-                let v = (j as f32 + random_double(rng)) / HEIGHT as f32;
+                let u = (i as f32 + random_double(rng)) / cam.width as f32;
+                let v = (j as f32 + random_double(rng)) / cam.height as f32;
                 let ray = cam.get_ray(u, v, rng);
                 col += color(ray, world, max_depth, rng).map(de_nan);
                 // col += colorr(&ray, world, 0, max_depth, rng).map(de_nan);
