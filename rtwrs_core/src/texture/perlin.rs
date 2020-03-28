@@ -1,4 +1,7 @@
-use crate::{random::random_double, vec3::Vec3};
+use crate::{
+    random::random_double,
+    vec3::{Vec3, Vec3Wrapper},
+};
 use lazy_static::lazy_static;
 use rand::{prelude::SliceRandom, rngs::SmallRng, SeedableRng};
 
@@ -20,9 +23,9 @@ impl Perlin {
         for di in 0..2 {
             for dj in 0..2 {
                 for dk in 0..2 {
-                    let ix = PERM_X[((ijk.x as i32 + di as i32) & 255) as usize];
-                    let iy = PERM_Y[((ijk.y as i32 + dj as i32) & 255) as usize];
-                    let iz = PERM_Z[((ijk.z as i32 + dk as i32) & 255) as usize];
+                    let ix = PERM_X[((ijk.x() as i32 + di as i32) & 255) as usize];
+                    let iy = PERM_Y[((ijk.y() as i32 + dj as i32) & 255) as usize];
+                    let iz = PERM_Z[((ijk.z() as i32 + dk as i32) & 255) as usize];
                     corners[di][dj][dk] = VECS[(ix ^ iy ^ iz) as usize]
                 }
             }
@@ -55,7 +58,7 @@ fn perlin_generate() -> Vec<Vec3> {
                 2. * random_double(rng) - 1.0,
                 2. * random_double(rng) - 1.0,
             )
-            .unit(),
+            .normalize(),
         );
     }
     result
@@ -77,8 +80,8 @@ fn trilinear_interpolate(corners: &[[[Vec3; 2]; 2]; 2], uvw: Vec3) -> f32 {
             for k in 0..2 {
                 let ijk = Vec3::new(i as f32, j as f32, k as f32);
                 let weight = uvw - ijk;
-                let acc_temp = ijk * uvw2 + (Vec3::from(1.) - ijk) * (Vec3::from(1.) - uvw);
-                accum += acc_temp.x * acc_temp.y * acc_temp.z * corners[i][j][k].dot(weight);
+                let acc_temp = ijk * uvw2 + (Vec3::splat(1.) - ijk) * (Vec3::splat(1.) - uvw);
+                accum += acc_temp.x() * acc_temp.y() * acc_temp.z() * corners[i][j][k].dot(weight);
             }
         }
     }

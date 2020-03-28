@@ -4,7 +4,7 @@ use crate::{
     random::random_double,
     ray::Ray,
     texture::TextureType,
-    vec3::Vec3,
+    vec3::{Vec3, Vec3Wrapper},
 };
 use rand::{rngs::SmallRng, SeedableRng};
 
@@ -51,11 +51,11 @@ impl Hittable for ConstantMedium {
                     rec1.t = 0.0;
                 }
 
-                let distance_inside_boundary = (rec2.t - rec1.t) * r.direction.norm();
+                let distance_inside_boundary = (rec2.t - rec1.t) * r.direction.length();
                 let hit_distance = -(1. / self.density) * random_double(rng).ln();
 
                 if hit_distance < distance_inside_boundary {
-                    let t = rec1.t + hit_distance / r.direction.norm();
+                    let t = rec1.t + hit_distance / r.direction.length();
                     let point = r.point_at(t);
 
                     return Some(HitRecord {

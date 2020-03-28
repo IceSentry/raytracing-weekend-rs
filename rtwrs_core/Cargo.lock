@@ -138,9 +138,9 @@ checksum = "bb1f6b1ce1c140482ea30ddd3335fc0024ac7ee112895426e0a629a6c20adfe3"
 
 [[package]]
 name = "enum_dispatch"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97c676e703d999177c8de93e98dc09d6f4f3f0bb087d4384c3deca69bbe6a99d"
+checksum = "85d18d6ef5ed410ff2b56c929341f4ba75261abde64b974a2ca59f666339c0f2"
 dependencies = [
  "once_cell",
  "proc-macro2",
@@ -163,6 +163,15 @@ dependencies = [
  "cfg-if",
  "libc",
  "wasi",
+]
+
+[[package]]
+name = "glam"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7eebc7285e5b49657375fdbf7cb7b8bcb296eb031744455c08850fdc1711644"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]
@@ -335,6 +344,7 @@ dependencies = [
  "derive-new",
  "derive_builder",
  "enum_dispatch",
+ "glam",
  "impl_ops",
  "lazy_static",
  "rand",

@@ -20,7 +20,7 @@ use rtwrs_core::{
         checker_texture::CheckerTexture, constant_texture::ConstantTexture,
         image_texture::ImageTexture, noise_texture::NoiseTexture, perlin::Perlin, TextureType,
     },
-    vec3::Vec3,
+    vec3::{Vec3, Vec3Wrapper},
 };
 
 use crate::{HEIGHT, WIDTH};
@@ -104,7 +104,7 @@ pub fn random_scene(rng: &mut impl Rng) -> Scene {
                 b as f32 + 0.9 * random_double(rng),
             );
 
-            if (center - Vec3::new(4., 0.2, 0.)).norm() > 0.9 {
+            if (center - Vec3::new(4., 0.2, 0.)).length() > 0.9 {
                 let material = match random_double(rng) {
                     x if (0.0..0.8).contains(&x) => Lambertian::new(ConstantTexture::new(
                         random_double(rng) * random_double(rng),

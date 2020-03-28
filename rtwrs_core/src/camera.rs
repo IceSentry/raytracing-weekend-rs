@@ -69,8 +69,8 @@ impl Camera {
         let half_height = (theta / 2.).tan();
         let half_width = config.aspect * half_height;
 
-        let w = (config.lookfrom - config.lookat).unit();
-        let u = config.vup.cross(w).unit();
+        let w = (config.lookfrom - config.lookat).normalize();
+        let u = config.vup.cross(w).normalize();
         let v = w.cross(u);
 
         Camera {
@@ -93,7 +93,8 @@ impl Camera {
 
     pub fn get_ray(&self, u: f32, v: f32, rng: &mut impl Rng) -> Ray {
         let rd = self.lens_radius * random_in_unit_disk(rng);
-        let offset = u * rd.x + v * rd.y;
+        let offset = u * rd.x() + v * rd.y();
+        let offset = Vec3::splat(offset);
         let origin = self.origin + offset;
         let direction =
             self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin - offset;

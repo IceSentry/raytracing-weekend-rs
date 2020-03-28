@@ -8,46 +8,17 @@ pub struct AABB {
     pub max: Vec3,
 }
 
-fn ffmin(a: f32, b: f32) -> f32 {
-    if a < b {
-        a
-    } else {
-        b
-    }
-}
-
-fn ffmax(a: f32, b: f32) -> f32 {
-    if a > b {
-        a
-    } else {
-        b
-    }
-}
-
 pub fn surrounding_box(box0: AABB, box1: AABB) -> AABB {
-    let small = Vec3::new(
-        ffmin(box0.min.x, box1.min.x),
-        ffmin(box0.min.y, box1.min.y),
-        ffmin(box0.min.z, box1.min.z),
-    );
-
-    let big = Vec3::new(
-        ffmax(box0.max.x, box1.max.x),
-        ffmax(box0.max.y, box1.max.y),
-        ffmax(box0.max.z, box1.max.z),
-    );
-
-    AABB {
-        min: small,
-        max: big,
-    }
+    let min = Vec3::min(box0.min, box1.min);
+    let max = Vec3::max(box0.max, box1.max);
+    AABB { min, max }
 }
 
 impl AABB {
     pub fn hit(&self, ray: &Ray, tmin: f32, tmax: f32) -> Option<(f32, f32)> {
         let mut tmin = tmin;
         let mut tmax = tmax;
-        let inv_d = 1. / ray.direction;
+        let inv_d = ray.direction.reciprocal();
         for i in 0..3 {
             let mut t0 = (self.min[i] - ray.origin[i]) * inv_d[i];
             let mut t1 = (self.max[i] - ray.origin[i]) * inv_d[i];

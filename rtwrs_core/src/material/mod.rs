@@ -14,9 +14,10 @@ mod utils;
 
 #[enum_dispatch]
 pub trait Material: Clone {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)>;
+    fn scatter(&self, ray: &Ray, hit: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)>;
 
-    fn emitted(&self, _u: f32, _v: f32, _p: Vec3) -> Vec3 {
+    #[allow(unused)]
+    fn emitted(&self, u: f32, v: f32, point: Vec3) -> Vec3 {
         Vec3::zero()
     }
 }
@@ -43,11 +44,11 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
-        let target = rec.point + rec.normal + random_in_unit_sphere(rng);
+    fn scatter(&self, ray: &Ray, hit: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+        let target = hit.point + hit.normal + random_in_unit_sphere(rng);
         Some((
-            Ray::new(rec.point, target - rec.point, ray_in.time),
-            self.albedo.value(rec.u, rec.v, rec.point),
+            Ray::new(hit.point, target - hit.point, ray.time),
+            self.albedo.value(hit.u, hit.v, hit.point),
         ))
     }
 }
@@ -59,17 +60,17 @@ pub struct Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+    fn scatter(&self, ray: &Ray, hit: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
         let fuzz = if self.fuzz < 1. { self.fuzz } else { 1. };
 
-        let reflected = reflect(ray_in.direction.unit(), rec.normal);
+        let reflected = reflect(ray.direction.normalize(), hit.normal);
         let scattered = Ray::new(
-            rec.point,
+            hit.point,
             reflected + fuzz * random_in_unit_sphere(rng),
-            ray_in.time,
+            ray.time,
         );
 
-        if scattered.direction.dot(rec.normal) > 0. {
+        if scattered.direction.dot(hit.normal) > 0. {
             Some((scattered, self.albedo))
         } else {
             None
@@ -83,24 +84,24 @@ pub struct Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
-        let reflected = reflect(ray_in.direction, rec.normal);
+    fn scatter(&self, ray: &Ray, hit: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+        let reflected = reflect(ray.direction, hit.normal);
         let attenuation = Vec3::new(1., 1., 1.);
         let outward_normal: Vec3;
         let ni_over_nt: f32;
         let cosine: f32;
 
-        if ray_in.direction.dot(rec.normal) > 0. {
-            outward_normal = -rec.normal;
+        if ray.direction.dot(hit.normal) > 0. {
+            outward_normal = -hit.normal;
             ni_over_nt = self.ref_idx;
-            cosine = self.ref_idx * ray_in.direction.dot(rec.normal) / ray_in.direction.norm()
+            cosine = self.ref_idx * ray.direction.dot(hit.normal) / ray.direction.length()
         } else {
-            outward_normal = rec.normal;
+            outward_normal = hit.normal;
             ni_over_nt = 1. / self.ref_idx;
-            cosine = -ray_in.direction.dot(rec.normal) / ray_in.direction.norm()
+            cosine = -ray.direction.dot(hit.normal) / ray.direction.length()
         }
 
-        let scattered = match refract(ray_in.direction, outward_normal, ni_over_nt) {
+        let scattered = match refract(ray.direction, outward_normal, ni_over_nt) {
             Some(refracted) => {
                 if random_double(rng) > schlick(cosine, self.ref_idx) {
                     refracted
@@ -111,7 +112,7 @@ impl Material for Dielectric {
             None => reflected,
         };
 
-        Some((Ray::new(rec.point, scattered, 0.), attenuation))
+        Some((Ray::new(hit.point, scattered, 0.), attenuation))
     }
 }
 
@@ -127,7 +128,7 @@ impl DiffuseLight {
 }
 
 impl Material for DiffuseLight {
-    fn scatter(&self, _ray_in: &Ray, _rec: &HitRecord, _rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+    fn scatter(&self, _ray: &Ray, _hit: &HitRecord, _rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
         None
     }
 
@@ -148,9 +149,9 @@ impl Isotropic {
 }
 
 impl Material for Isotropic {
-    fn scatter(&self, _ray_in: &Ray, rec: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
-        let scattered = Ray::new(rec.point, random_in_unit_sphere(rng), 0.0);
-        let attenuation = self.albedo.value(rec.u, rec.v, rec.point);
+    fn scatter(&self, _ray: &Ray, hit: &HitRecord, rng: &mut impl Rng) -> Option<(Ray, Vec3)> {
+        let scattered = Ray::new(hit.point, random_in_unit_sphere(rng), 0.0);
+        let attenuation = self.albedo.value(hit.u, hit.v, hit.point);
         Some((scattered, attenuation))
     }
 }
