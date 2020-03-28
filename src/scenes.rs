@@ -313,13 +313,13 @@ fn cornell_boxes() -> (Hittables, Hittables) {
 }
 
 #[allow(dead_code)]
-fn cornell_smoke() -> Vec<Hittables> {
+fn cornell_smoke() -> (Hittables, Hittables) {
     let (box1, box2) = cornell_boxes();
 
     let smoke_box1 = ConstantMedium::new(box1, 0.01, ConstantTexture::new(1.0, 1.0, 1.0));
     let smoke_box2 = ConstantMedium::new(box2, 0.01, ConstantTexture::new(0.0, 0.0, 0.0));
 
-    vec![cornell_box(), smoke_box1, smoke_box2]
+    (smoke_box1, smoke_box2)
 }
 
 pub fn cornell_box_scene() -> Scene {
