@@ -51,7 +51,7 @@ impl BoxRect {
                 p0.z()..p1.z(),
                 p0.x(),
                 StaticAxis::X,
-                material.clone(),
+                material,
             )),
         ]);
 

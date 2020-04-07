@@ -7,6 +7,7 @@ pub struct ConstantTexture {
 }
 
 impl ConstantTexture {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(r: f32, g: f32, b: f32) -> TextureType {
         TextureType::from(ConstantTexture {
             color: Vec3::new(r, g, b),

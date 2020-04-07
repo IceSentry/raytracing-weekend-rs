@@ -1,5 +1,3 @@
-use glam;
-
 pub type Vec3 = glam::Vec3;
 
 pub trait Vec3Wrapper {

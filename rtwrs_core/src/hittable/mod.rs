@@ -1,3 +1,5 @@
+#![allow(clippy::new_ret_no_self)]
+
 use derive_new::*;
 use enum_dispatch::enum_dispatch;
 

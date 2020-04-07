@@ -262,7 +262,7 @@ pub fn cornell_box() -> Hittables {
     let green = Lambertian::new(ConstantTexture::new(0.12, 0.45, 0.15));
     let white = Lambertian::new(ConstantTexture::new(0.73, 0.73, 0.73));
 
-    let light = DiffuseLight::new(ConstantTexture::new(2.0, 2.0, 2.0));
+    let light = DiffuseLight::new(ConstantTexture::new(1.0, 1.0, 1.0));
 
     HittableList::new(vec![
         Rect::new(113.0..443.0, 127.0..432.0, 554.0, StaticAxis::Y, light),
@@ -279,7 +279,7 @@ pub fn cornell_box() -> Hittables {
             0.0..555.0,
             555.0,
             StaticAxis::Z,
-            white.clone(),
+            white,
         )), // rear wall
         Rect::new(0.0..555.0, 0.0..555.0, 0.0, StaticAxis::X, red),
         FlipNormals::new(Rect::new(
@@ -303,7 +303,7 @@ fn cornell_boxes() -> (Hittables, Hittables) {
     );
     let box2 = Translate::new(
         RotateY::new(
-            BoxRect::new(Vec3::zero(), Vec3::newi(165, 330, 165), white.clone()),
+            BoxRect::new(Vec3::zero(), Vec3::newi(165, 330, 165), white),
             15.0,
         ),
         Vec3::newi(265, 0, 295),

@@ -51,7 +51,7 @@ impl Perlin {
 fn perlin_generate() -> Vec<Vec3> {
     let rng = &mut SmallRng::from_entropy();
     let mut result = Vec::with_capacity(256);
-    for _ in 0..255 {
+    for _ in 0..=255 {
         result.push(
             Vec3::new(
                 2. * random_double(rng) - 1.0,
@@ -66,7 +66,7 @@ fn perlin_generate() -> Vec<Vec3> {
 
 fn perlin_generate_perm() -> Vec<u8> {
     let rng = &mut SmallRng::from_entropy();
-    let mut p: Vec<u8> = (0..255).collect();
+    let mut p: Vec<u8> = (0..=255).collect();
     p.shuffle(rng);
     p
 }
