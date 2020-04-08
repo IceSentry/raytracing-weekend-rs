@@ -71,6 +71,7 @@ fn perlin_generate_perm() -> Vec<u8> {
     p
 }
 
+#[allow(clippy::needless_range_loop)]
 fn trilinear_interpolate(corners: &[[[Vec3; 2]; 2]; 2], uvw: Vec3) -> f32 {
     let uvw2 = uvw.map(|x| x * x * (3. - 2. * x));
 

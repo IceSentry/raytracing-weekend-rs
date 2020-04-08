@@ -410,9 +410,9 @@ checksum = "bb1f6b1ce1c140482ea30ddd3335fc0024ac7ee112895426e0a629a6c20adfe3"
 
 [[package]]
 name = "enum_dispatch"
-version = "0.2.2"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85d18d6ef5ed410ff2b56c929341f4ba75261abde64b974a2ca59f666339c0f2"
+checksum = "362f2fdb0b2cbc7a1926a6fb32281ee854a23a3d5c77e5291a2ffa8159dcc48e"
 dependencies = [
  "once_cell",
  "proc-macro2 1.0.9",
@@ -648,9 +648,9 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "image"
-version = "0.23.2"
+version = "0.23.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9062b90712d25bc6bb165d110aa59c6b47c849246e341e7b86a98daff9d49f60"
+checksum = "bfc5483f8d5afd3653b38a196c52294dcb239c3e1a5bade1990353ea13bcf387"
 dependencies = [
  "bytemuck",
  "byteorder",
@@ -1239,10 +1239,16 @@ dependencies = [
 name = "raytracing-weekend-rs"
 version = "0.1.0"
 dependencies = [
+ "derive-new",
+ "derive_builder",
+ "enum_dispatch",
+ "glam",
  "image",
+ "impl_ops",
+ "lazy_static",
  "pixels",
  "rand",
- "rtwrs_core",
+ "rayon",
  "structopt",
  "winit",
 ]
@@ -1288,20 +1294,6 @@ dependencies = [
  "relevant",
  "slab",
  "smallvec 0.6.13",
-]
-
-[[package]]
-name = "rtwrs_core"
-version = "0.1.0"
-dependencies = [
- "derive-new",
- "derive_builder",
- "enum_dispatch",
- "glam",
- "impl_ops",
- "lazy_static",
- "rand",
- "rayon",
 ]
 
 [[package]]

@@ -1,5 +1,4 @@
-use rand::Rng;
-use rtwrs_core::{
+use crate::{
     camera::{Camera, CameraConfig, CameraConfigBuilder},
     hittable::{
         box_rect::BoxRect,
@@ -22,6 +21,7 @@ use rtwrs_core::{
     },
     vec3::{Vec3, Vec3Wrapper},
 };
+use rand::Rng;
 
 use crate::{HEIGHT, WIDTH};
 

@@ -9,6 +9,7 @@ pub struct ImageTexture {
 }
 
 impl Texture for ImageTexture {
+    #[allow(clippy::many_single_char_names)]
     fn value(&self, u: f32, v: f32, _p: Vec3) -> Vec3 {
         let nx = self.nx as f32;
         let ny = self.ny as f32;

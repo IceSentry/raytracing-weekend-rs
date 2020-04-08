@@ -10,7 +10,7 @@ use crate::{
     material::Material,
     random::random_double,
     ray::Ray,
-    vec3::Vec3,
+    vec3::{Vec3, Vec3Wrapper},
 };
 
 fn color(mut ray: Ray, world: &Hittables, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
@@ -82,7 +82,7 @@ pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) 
                 let u = (i as f32 + random_double(rng)) / cam.width as f32;
                 let v = (j as f32 + random_double(rng)) / cam.height as f32;
                 let ray = cam.get_ray(u, v, rng);
-                col += color(ray, world, max_depth, rng);
+                col += color(ray, world, max_depth, rng).map(de_nan);
                 // col += colorr(&ray, world, 0, max_depth, rng).map(de_nan);
             }
             col /= num_samples as f32;

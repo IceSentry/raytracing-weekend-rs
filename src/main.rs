@@ -1,3 +1,14 @@
+mod camera;
+mod hittable;
+mod material;
+mod random;
+mod ray;
+mod renderer;
+mod scenes;
+mod texture;
+mod utils;
+mod vec3;
+
 use std::io::prelude::*;
 use std::{fs::File, time::Instant};
 
@@ -11,11 +22,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use rtwrs_core::renderer::render;
-
-mod scenes;
-
-use crate::scenes::get_scene_from_name;
+use crate::{renderer::render, scenes::get_scene_from_name};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 800;
@@ -61,9 +68,7 @@ struct Opts {
 
 fn main() -> Result<(), Error> {
     let opts: Opts = Opts::from_args();
-
     let rng = &mut SmallRng::from_entropy();
-
     let scene = get_scene_from_name(opts.scene_name.as_str(), rng);
 
     let event_loop = EventLoop::new();
