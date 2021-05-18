@@ -12,7 +12,7 @@ mod vec3;
 use std::io::prelude::*;
 use std::{fs::File, time::Instant};
 
-use pixels::{wgpu::Surface, Error, Pixels, SurfaceTexture};
+use pixels::{Error, Pixels, SurfaceTexture};
 use rand::{rngs::SmallRng, SeedableRng};
 use structopt::StructOpt;
 use winit::{
@@ -28,8 +28,7 @@ const WIDTH: u32 = 800;
 const HEIGHT: u32 = 800;
 
 fn init_pixels(window: &Window) -> Pixels {
-    let surface = Surface::create(window);
-    let surface_texture = SurfaceTexture::new(WIDTH, HEIGHT, surface);
+    let surface_texture = SurfaceTexture::new(WIDTH, HEIGHT, window);
     Pixels::new(WIDTH, HEIGHT, surface_texture).expect("Failed to create a new Pixels instance")
 }
 
@@ -95,12 +94,12 @@ fn main() -> Result<(), Error> {
                 window_id,
             } if window_id == window.id() => *control_flow = ControlFlow::Exit,
             Event::RedrawRequested(_) => {
-                pixels.render();
+                pixels.render().expect("Failed to render with pixels");
             }
             Event::WindowEvent {
                 event: WindowEvent::Resized(new_size),
                 ..
-            } => pixels.resize(new_size.width, new_size.height),
+            } => pixels.resize_surface(new_size.width, new_size.height),
             _ => (),
         }
     });

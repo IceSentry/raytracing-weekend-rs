@@ -14,13 +14,13 @@ use crate::{
 };
 
 fn color(mut ray: Ray, world: &Hittables, max_depth: i32, rng: &mut impl Rng) -> Vec3 {
-    let mut color_accumulator = Vec3::zero();
+    let mut color_accumulator = Vec3::ZERO;
     // let mut color_accumulator = {
     //     let t = 0.5 * (ray.direction.normalize().y + 1.0);
     //     (1. - t) * Vec3::one() + t * Vec3::new(0.5, 0.7, 1.)
     // };
     let mut bounces = 0;
-    let mut strength = Vec3::one();
+    let mut strength = Vec3::ONE;
 
     while let Some(hit) = world.hit(&ray, 0.001, f32::MAX) {
         let emitted = hit.mat.emitted(hit.u, hit.v, hit.point);
@@ -58,7 +58,7 @@ fn colorr(r: &Ray, world: &Hittables, depth: i32, max_depth: i32, rng: &mut impl
                 None => emitted,
             }
         }
-        None => Vec3::zero(),
+        None => Vec3::ZERO,
     }
 }
 
@@ -77,7 +77,7 @@ pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) 
             let i = screen_pos % cam.width;
             let j = cam.height - 1 - screen_pos / cam.width; // reverse the height index
 
-            let mut col: Vec3 = Vec3::zero();
+            let mut col: Vec3 = Vec3::ZERO;
             for _ in 0..num_samples {
                 let u = (i as f32 + random_double(rng)) / cam.width as f32;
                 let v = (j as f32 + random_double(rng)) / cam.height as f32;
@@ -86,11 +86,11 @@ pub fn render(cam: Camera, world: &Hittables, num_samples: i32, max_depth: i32) 
                 // col += colorr(&ray, world, 0, max_depth, rng).map(de_nan);
             }
             col /= num_samples as f32;
-            col = Vec3::new(col.x().sqrt(), col.y().sqrt(), col.z().sqrt());
+            col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
 
             let vrgb = 255.99 * col;
 
-            vec![vrgb.x() as u8, vrgb.y() as u8, vrgb.z() as u8, 0xff]
+            vec![vrgb.x as u8, vrgb.y as u8, vrgb.z as u8, 0xff]
         })
         .flatten()
         .collect()

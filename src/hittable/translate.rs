@@ -30,12 +30,9 @@ impl Hittable for Translate {
     }
 
     fn bounding_box(&self, t0: f32, t1: f32) -> Option<super::aabb::AABB> {
-        match self.ptr.bounding_box(t0, t1) {
-            Some(bbox) => Some(AABB {
-                min: bbox.min + self.offset,
-                max: bbox.max + self.offset,
-            }),
-            None => None,
-        }
+        self.ptr.bounding_box(t0, t1).map(|bbox| AABB {
+            min: bbox.min + self.offset,
+            max: bbox.max + self.offset,
+        })
     }
 }

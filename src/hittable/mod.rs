@@ -60,8 +60,8 @@ pub enum Hittables {
 pub fn get_sphere_uv(p: Vec3) -> (f32, f32) {
     use std::f32::consts::{FRAC_PI_2, PI};
 
-    let phi = p.z().atan2(p.x());
-    let theta = p.y().asin();
+    let phi = p.z.atan2(p.x);
+    let theta = p.y.asin();
     let u = 1. - (phi + PI) / (2. * PI);
     let v = (theta + FRAC_PI_2) / PI;
 

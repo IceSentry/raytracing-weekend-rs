@@ -5,7 +5,7 @@ use std::ops::Range;
 
 fn random_in_unit_disk(rng: &mut impl Rng) -> Vec3 {
     loop {
-        let p = 2. * Vec3::new(rng.gen_range(0., 1.), rng.gen_range(0., 1.), 0.)
+        let p = 2. * Vec3::new(rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), 0.)
             - Vec3::new(1., 1., 0.);
 
         if p.dot(p) >= 1. {
@@ -93,12 +93,12 @@ impl Camera {
 
     pub fn get_ray(&self, u: f32, v: f32, rng: &mut impl Rng) -> Ray {
         let rd = self.lens_radius * random_in_unit_disk(rng);
-        let offset = u * rd.x() + v * rd.y();
+        let offset = u * rd.x + v * rd.y;
         let offset = Vec3::splat(offset);
         let origin = self.origin + offset;
         let direction =
             self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin - offset;
-        let time = rng.gen_range(self.exposure.start, self.exposure.end);
+        let time = rng.gen_range(self.exposure.start..self.exposure.end);
 
         Ray::new(origin, direction, time)
     }

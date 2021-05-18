@@ -18,7 +18,7 @@ impl AABB {
     pub fn hit(&self, ray: &Ray, tmin: f32, tmax: f32) -> Option<(f32, f32)> {
         let mut tmin = tmin;
         let mut tmax = tmax;
-        let inv_d = ray.direction.reciprocal();
+        let inv_d = ray.direction.recip();
         for i in 0..3 {
             let mut t0 = (self.min[i] - ray.origin[i]) * inv_d[i];
             let mut t1 = (self.max[i] - ray.origin[i]) * inv_d[i];

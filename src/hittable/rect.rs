@@ -59,7 +59,7 @@ impl Hittable for Rect {
         let u = (axis1 - self.range1.start) / (self.range1.end - self.range1.start);
         let v = (axis2 - self.range2.start) / (self.range2.end - self.range2.start);
         let point = r.point_at(t);
-        let mut normal = Vec3::zero();
+        let mut normal = Vec3::ZERO;
         normal[axis_index.0] = 1.0;
 
         Some(HitRecord::new(t, u, v, point, normal, &self.material))

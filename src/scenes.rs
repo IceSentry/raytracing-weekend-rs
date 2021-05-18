@@ -296,14 +296,14 @@ fn cornell_boxes() -> (Hittables, Hittables) {
     let white = Lambertian::new(ConstantTexture::new(0.73, 0.73, 0.73));
     let box1 = Translate::new(
         RotateY::new(
-            BoxRect::new(Vec3::zero(), Vec3::newi(165, 165, 165), white.clone()),
+            BoxRect::new(Vec3::ZERO, Vec3::newi(165, 165, 165), white.clone()),
             -18.0,
         ),
         Vec3::newi(130, 0, 65),
     );
     let box2 = Translate::new(
         RotateY::new(
-            BoxRect::new(Vec3::zero(), Vec3::newi(165, 330, 165), white),
+            BoxRect::new(Vec3::ZERO, Vec3::newi(165, 330, 165), white),
             15.0,
         ),
         Vec3::newi(265, 0, 295),

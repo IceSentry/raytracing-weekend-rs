@@ -29,9 +29,9 @@ impl RotateY {
                     let ijk = Vec3::newi(i, j, k);
                     let xyz = ijk * bbox.unwrap().max + ijk.map(|n| 1. - n) * bbox.unwrap().min;
 
-                    let new_x = cos_theta * xyz.x() + sin_theta * xyz.z();
-                    let new_z = -sin_theta * xyz.x() + cos_theta * xyz.z();
-                    let tester = Vec3::new(new_x, xyz.y(), new_z);
+                    let new_x = cos_theta * xyz.x + sin_theta * xyz.z;
+                    let new_z = -sin_theta * xyz.x + cos_theta * xyz.z;
+                    let tester = Vec3::new(new_x, xyz.y, new_z);
 
                     for c in 0..3 {
                         if tester[c] > max[c] {
@@ -62,10 +62,10 @@ impl Hittable for RotateY {
         let mut origin = r.origin;
         let mut direction = r.direction;
 
-        origin.set_x(self.cos_theta * r.origin.x() - self.sin_theta * r.origin.z());
-        origin.set_z(self.sin_theta * r.origin.x() + self.cos_theta * r.origin.z());
-        direction.set_x(self.cos_theta * r.direction.x() - self.sin_theta * r.direction.z());
-        direction.set_z(self.sin_theta * r.direction.x() + self.cos_theta * r.direction.z());
+        origin.x = self.cos_theta * r.origin.x - self.sin_theta * r.origin.z;
+        origin.z = self.sin_theta * r.origin.x + self.cos_theta * r.origin.z;
+        direction.x = self.cos_theta * r.direction.x - self.sin_theta * r.direction.z;
+        direction.z = self.sin_theta * r.direction.x + self.cos_theta * r.direction.z;
 
         let rotated_r = Ray::new(origin, direction, r.time);
 
@@ -73,10 +73,10 @@ impl Hittable for RotateY {
             let mut p = rec.point;
             let mut normal = rec.normal;
 
-            p.set_x(self.cos_theta * rec.point.x() + self.sin_theta * rec.point.z());
-            p.set_z(-self.sin_theta * rec.point.x() + self.cos_theta * rec.point.z());
-            normal.set_x(self.cos_theta * rec.normal.x() + self.sin_theta * rec.normal.z());
-            normal.set_z(-self.sin_theta * rec.normal.x() + self.cos_theta * rec.normal.z());
+            p.x = self.cos_theta * rec.point.x + self.sin_theta * rec.point.z;
+            p.z = -self.sin_theta * rec.point.x + self.cos_theta * rec.point.z;
+            normal.x = self.cos_theta * rec.normal.x + self.sin_theta * rec.normal.z;
+            normal.z = -self.sin_theta * rec.normal.x + self.cos_theta * rec.normal.z;
 
             let mut rec = rec;
             rec.point = p;

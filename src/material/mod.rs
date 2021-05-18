@@ -20,7 +20,7 @@ pub trait Material: Clone {
 
     #[allow(unused)]
     fn emitted(&self, u: f32, v: f32, point: Vec3) -> Vec3 {
-        Vec3::zero()
+        Vec3::ZERO
     }
 }
 

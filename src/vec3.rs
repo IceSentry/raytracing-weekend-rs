@@ -17,14 +17,14 @@ impl Vec3Wrapper for Vec3 {
     /// Applies `f` to each element of the vector in turn, giving a new vector.
     #[inline]
     fn map(&self, mut f: impl FnMut(f32) -> f32) -> Self {
-        Vec3::new(f(self.x()), f(self.y()), f(self.z()))
+        Vec3::new(f(self.x), f(self.y), f(self.z))
     }
 
     /// Applies `f` to each element of the vector in turn, giving a new vector.
     #[inline]
     fn map_mut(&mut self, mut f: impl FnMut(f32) -> f32) {
-        self.set_x(f(self.x()));
-        self.set_y(f(self.y()));
-        self.set_z(f(self.z()));
+        self.x = f(self.x);
+        self.y = f(self.y);
+        self.z = f(self.z);
     }
 }
