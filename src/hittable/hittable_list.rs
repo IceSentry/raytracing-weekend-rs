@@ -23,7 +23,7 @@ impl Hittable for HittableList {
         let mut result = None;
 
         for hittable in self.list.iter() {
-            if let Some(rec) = hittable.hit(&r, t_min, closest_so_far) {
+            if let Some(rec) = hittable.hit(r, t_min, closest_so_far) {
                 closest_so_far = rec.t;
                 result = Some(rec);
             }

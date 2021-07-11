@@ -2,6 +2,7 @@ use std::mem;
 
 use crate::{ray::Ray, vec3::Vec3};
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Copy)]
 pub struct AABB {
     pub min: Vec3,

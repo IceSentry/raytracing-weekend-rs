@@ -38,7 +38,7 @@ fn init_window(event_loop: &EventLoop<()>) -> Window {
         .with_title("Rendering...")
         .with_inner_size(size)
         .with_min_inner_size(size)
-        .build(&event_loop)
+        .build(event_loop)
         .unwrap()
 }
 

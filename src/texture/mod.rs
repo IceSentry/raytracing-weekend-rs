@@ -15,6 +15,7 @@ pub mod perlin;
 
 #[enum_dispatch(Texture)]
 #[derive(Clone)]
+#[allow(clippy::enum_variant_names)]
 pub enum TextureType {
     ConstantTexture,
     CheckerTexture,
